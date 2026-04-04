@@ -10,13 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 @Slf4j
 public class RequestResponseLoggingLogger extends Logger {
-
-
 
   @Override
   protected void log(String configKey, String format, Object... args) {
@@ -26,7 +23,6 @@ public class RequestResponseLoggingLogger extends Logger {
   @Override
   protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime)
       throws IOException {
-
 
     Request request = response.request();
     byte[] responseBody = readResponseBody(response);

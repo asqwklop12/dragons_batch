@@ -1,5 +1,6 @@
 kamis:
   api:
+    base-url: https://www.kamis.or.kr
     cert-key: ${CERT_KEY}
     cert-id: ${CERT_ID}
     mock-mode: false

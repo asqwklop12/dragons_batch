@@ -1,9 +1,12 @@
 package com.dragons;
 
+import client.KamisFeignClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
+@EnableFeignClients(basePackageClasses = KamisFeignClient.class)
 public class Application {
 
   public static void main(String[] args) {

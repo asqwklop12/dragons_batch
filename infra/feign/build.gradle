@@ -3,7 +3,8 @@ plugins {
 }
 
 dependencies {
-    api 'io.github.openfeign:feign-core:13.5'
+    api 'org.springframework.cloud:spring-cloud-starter-openfeign:5.0.1'
+    implementation project(':infra:jackson')
     implementation 'org.springframework.boot:spring-boot-starter'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
