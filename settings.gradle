@@ -1,0 +1,12 @@
+rootProject.name = 'dragons-batch'
+
+include(
+        ':common',
+        ':domain',
+        ':infra:jackson',
+        ':infra:jpa',
+        ':infra:logging',
+        ':infra:feign',
+        ':apps:batch-core',
+        ':apps:dragons_api'
+)

@@ -1,0 +1,146 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.springframework.boot",
+    "module": "spring-boot-starter-jdbc",
+    "version": "4.0.5",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-starter",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-jdbc",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "com.zaxxer",
+          "module": "HikariCP",
+          "version": {
+            "requires": "7.0.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-starter-jdbc-4.0.5.jar",
+          "url": "spring-boot-starter-jdbc-4.0.5.jar",
+          "size": 4769,
+          "sha512": "1adbcd77258af15a669fe6040698d759e13c841907eca02f1358d3f4bf605dcabed0c601bb1f94c995b95308dbaf47002678ef08a40837cebfdb916d736d7515",
+          "sha256": "071bf44c52e706f543d41110d355c827c96fe05e0a13e7e88dfba925104d3f5d",
+          "sha1": "2ca3dfd8e504d7fec3c477a0ed44231e37d531a4",
+          "md5": "6baf5b45bda63998c11a43fa40a34d7a"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-starter",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-jdbc",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "com.zaxxer",
+          "module": "HikariCP",
+          "version": {
+            "requires": "7.0.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-starter-jdbc-4.0.5.jar",
+          "url": "spring-boot-starter-jdbc-4.0.5.jar",
+          "size": 4769,
+          "sha512": "1adbcd77258af15a669fe6040698d759e13c841907eca02f1358d3f4bf605dcabed0c601bb1f94c995b95308dbaf47002678ef08a40837cebfdb916d736d7515",
+          "sha256": "071bf44c52e706f543d41110d355c827c96fe05e0a13e7e88dfba925104d3f5d",
+          "sha1": "2ca3dfd8e504d7fec3c477a0ed44231e37d531a4",
+          "md5": "6baf5b45bda63998c11a43fa40a34d7a"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-starter-jdbc-4.0.5-javadoc.jar",
+          "url": "spring-boot-starter-jdbc-4.0.5-javadoc.jar",
+          "size": 4769,
+          "sha512": "1adbcd77258af15a669fe6040698d759e13c841907eca02f1358d3f4bf605dcabed0c601bb1f94c995b95308dbaf47002678ef08a40837cebfdb916d736d7515",
+          "sha256": "071bf44c52e706f543d41110d355c827c96fe05e0a13e7e88dfba925104d3f5d",
+          "sha1": "2ca3dfd8e504d7fec3c477a0ed44231e37d531a4",
+          "md5": "6baf5b45bda63998c11a43fa40a34d7a"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-starter-jdbc-4.0.5-sources.jar",
+          "url": "spring-boot-starter-jdbc-4.0.5-sources.jar",
+          "size": 4769,
+          "sha512": "1adbcd77258af15a669fe6040698d759e13c841907eca02f1358d3f4bf605dcabed0c601bb1f94c995b95308dbaf47002678ef08a40837cebfdb916d736d7515",
+          "sha256": "071bf44c52e706f543d41110d355c827c96fe05e0a13e7e88dfba925104d3f5d",
+          "sha1": "2ca3dfd8e504d7fec3c477a0ed44231e37d531a4",
+          "md5": "6baf5b45bda63998c11a43fa40a34d7a"
+        }
+      ]
+    }
+  ]
+}

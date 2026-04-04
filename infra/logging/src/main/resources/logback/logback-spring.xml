@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+
+    <!-- Default LOG_DIR for profiles without specific configuration (Root execution) -->
+    <property name="LOG_DIR" value="./logs"/>
+    <property name="LOG_LEVEL" value="INFO"/>
+
+    <!-- Test environment runs in sub-module directory, so use ../../logs -->
+    <springProfile name="test">
+        <property name="LOG_DIR" value="../../logs"/>
+    </springProfile>
+
+    <springProfile name="local">
+        <!-- Local uses ./logs to show logs at repository root -->
+        <springProperty scope="context" name="LOG_DIR" source="dragons.log.dir" defaultValue="./logs"/>
+        <springProperty scope="context" name="LOG_LEVEL" source="dragons.log.level" defaultValue="INFO"/>
+        <springProperty scope="context" name="USE_FILE" source="dragons.log.use-file" defaultValue="Y"/>
+        <springProperty scope="context" name="USE_CONSOLE" source="dragons.log.use-console" defaultValue="Y"/>
+        <springProperty scope="context" name="EXPIRE_DAY" source="dragons.log.expire-day" defaultValue="2"/>
+    </springProfile>
+
+    <springProfile name="dev">
+        <springProperty scope="context" name="LOG_DIR" source="log.dir" defaultValue="/opt/logs"/>
+        <springProperty scope="context" name="LOG_LEVEL" source="log.level" defaultValue="INFO"/>
+        <springProperty scope="context" name="USE_CONSOLE" source="log.use-console" defaultValue="N"/>
+        <springProperty scope="context" name="USE_FILE" source="log.use-file" defaultValue="Y"/>
+    </springProfile>
+
+
+    <!-- Appenders -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%highlight(%-5level)[%d{yyyy-MM-dd HH:mm:ss.SSS}][%X{request_id:-startup}][%thread] %cyan(%logger{36}) - %msg%n </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="INFO_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <file>${LOG_DIR}/dragons.${HOSTNAME}.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/dragons.%d{yyyy-MM-dd}.${HOSTNAME}.%i.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-5level[%d{yyyy-MM-dd HH:mm:ss.SSS}][%X{request_id:-startup}][%thread] %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework" level="ERROR" />
+    <!--    <logger name="org.mybatis" level="ERROR" />-->
+    <!-- RequestMapping URL 확인용 : 최초 로드 시, 로그 작성 -->
+    <logger name="org.springframework.web" level="INFO" />
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="console" />
+        <appender-ref ref="INFO_LOG" />
+    </root>
+
+    <springProfile name="prod">
+        <!-- 프로덕션: JSON 형식 로그 -->
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"application":"dragons_api"}</customFields>
+                <includeMdcKeyName>request_id</includeMdcKeyName>
+            </encoder>
+        </appender>
+
+        <appender name="ASYNC_JSON_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>51</discardingThreshold> <!-- 큐가 90% 이상 찼을 때 TRACE/DEBUG 드롭 -->
+            <includeCallerData>false</includeCallerData>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="ASYNC_JSON_CONSOLE"/>
+            <appender-ref ref="INFO_LOG"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <!-- 로컬: 읽기 쉬운 텍스트 형식 -->
+        <root level="INFO">
+            <appender-ref ref="console"/>
+            <appender-ref ref="INFO_LOG"/>
+        </root>
+    </springProfile>
+
+</configuration>

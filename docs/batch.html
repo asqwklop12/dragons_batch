@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAMIS 배치 관리</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f0f4f8;
+    --white: #ffffff;
+    --surface2: #f7fafc;
+    --border: #e2e8f0;
+    --accent: #2e7d32;
+    --accent-light: #e8f5e9;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --warn: #f57c00;
+    --red: #c62828;
+    --radius: 12px;
+    --shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1a1a2e;
+    color: white;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left .logo { font-size: 22px; }
+  .header-left h1 { font-size: 16px; font-weight: 700; }
+  .header-left p { font-size: 11px; opacity: .6; }
+
+  .header-nav a {
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.2);
+    transition: all .15s;
+  }
+  .header-nav a:hover { background: rgba(255,255,255,.1); color: white; }
+
+  .status-bar {
+    background: #0d1117;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #8892a4;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; animation: pulse 2s infinite; }
+  .dot.ok { background: #6ee7b7; animation: none; }
+  .dot.error { background: #f87171; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  main { max-width: 960px; margin: 0 auto; padding: 32px 24px; display: grid; gap: 20px; }
+
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-head {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-head .ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .card-head h2 { font-size: 15px; font-weight: 700; }
+  .card-head p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .card-body { padding: 20px; }
+
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 18px; }
+  .cat-chip {
+    background: var(--surface2); border: 2px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; cursor: pointer; text-align: center;
+    font-size: 13px; font-weight: 600; color: var(--text-muted); transition: all .15s;
+  }
+  .cat-chip .emoji { font-size: 18px; display: block; margin-bottom: 4px; }
+  .cat-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-chip.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } main { padding: 16px 12px; } header { padding: 0 16px; } }
+
+  .form-group label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color .15s;
+  }
+  input:focus { border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 8px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1b5e20; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .result-area { margin-top: 16px; }
+  .spinner { display: none; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; padding: 12px 0; }
+  .spinner.show { display: flex; }
+  .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-ok   { background: #e8f5e9; border: 1px solid #a5d6a7; color: var(--accent); }
+  .alert-err  { background: #ffebee; border: 1px solid #ef9a9a; color: var(--red); }
+  .alert-warn { background: #fff8e1; border: 1px solid #ffe082; color: var(--warn); }
+
+  .json-block {
+    background: #0d1117; border-radius: 8px; padding: 14px;
+    font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.6;
+    overflow: auto; max-height: 280px; white-space: pre; color: #a5f3fc; margin-top: 10px;
+  }
+
+  .history-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }
+  .history-item:last-child { margin-bottom: 0; }
+  .history-row { display: flex; align-items: center; justify-content: space-between; }
+  .history-title { font-weight: 700; font-size: 13px; }
+  .history-id { color: var(--text-muted); font-size: 11px; margin-left: 6px; }
+  .history-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .history-params { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-green  { background: #e8f5e9; color: var(--accent); }
+  .badge-red    { background: #ffebee; color: var(--red); }
+  .badge-yellow { background: #fff8e1; color: var(--warn); }
+
+  .empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px; }
+  .empty .ico { font-size: 32px; margin-bottom: 8px; }
+
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .config-item {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .config-item .key { font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">⚙️</div>
+    <div>
+      <h1>배치 관리</h1>
+      <p>KAMIS API 데이터 수집 및 실행 이력</p>
+    </div>
+  </div>
+</header>
+
+<div class="status-bar">
+  <div class="dot" id="status-dot"></div>
+  <span id="status-text">API 상태 확인 중...</span>
+</div>
+
+<main>
+
+  <!-- API 설정 상태 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="ico" style="background:#e8eaf6">🔑</div>
+      <div>
+        <h2>API 설정 상태</h2>
+        <p>KAMIS 인증키 설정 여부 확인</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="config-grid" id="config-grid">
+        <div class="config-item"><span class="key">상태</span><span>확인 중...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 배치 실행 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="ico" style="background:#e8f5e9">▶️</div>
+      <div>
+        <h2>배치 수동 실행</h2>
+        <p>POST /api/batch/run — KAMIS API에서 데이터를 가져와 DB에 저장합니다</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">품목 카테고리 선택</p>
+      <div class="cat-grid">
+        <div class="cat-chip" data-code="100" onclick="selectCat(this)"><span class="emoji">🌾</span>식량작물</div>
+        <div class="cat-chip active" data-code="200" onclick="selectCat(this)"><span class="emoji">🥬</span>채소류</div>
+        <div class="cat-chip" data-code="300" onclick="selectCat(this)"><span class="emoji">🌿</span>특용작물</div>
+        <div class="cat-chip" data-code="400" onclick="selectCat(this)"><span class="emoji">🍎</span>과일류</div>
+        <div class="cat-chip" data-code="500" onclick="selectCat(this)"><span class="emoji">🥩</span>축산물</div>
+        <div class="cat-chip" data-code="600" onclick="selectCat(this)"><span class="emoji">🐟</span>수산물</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>카테고리 코드</label>
+          <input type="text" id="batch-category" value="200">
+        </div>
+        <div class="form-group">
+          <label>조회 날짜 (regDay)</label>
+          <input type="date" id="batch-regday">
+        </div>
+        <button class="btn btn-primary" id="btn-run" onclick="runBatch()">▶ 실행</button>
+      </div>
+
+      <div class="result-area">
+        <div class="spinner" id="run-spinner"><div class="spin"></div>배치 실행 중...</div>
+        <div id="run-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 배치 이력 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="ico" style="background:#fce4ec">📋</div>
+      <div>
+        <h2>실행 이력</h2>
+        <p>GET /api/batch/status — 최근 배치 Job 실행 내역</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <button class="btn btn-secondary" onclick="loadHistory()" style="margin-bottom:16px">🔄 새로고침</button>
+      <div class="spinner" id="history-spinner"><div class="spin"></div>조회 중...</div>
+      <div id="history-result"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BASE = '';
+
+document.getElementById('batch-regday').value = new Date().toISOString().slice(0, 10);
+
+async function checkStatus() {
+  try {
+    const res = await fetch(BASE + '/api/batch/config');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const dot = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+
+    dot.className = data.apiConfigured ? 'dot ok' : 'dot';
+    text.textContent = data.apiConfigured
+      ? 'KAMIS API 연결됨 — 실제 데이터를 사용합니다'
+      : 'KAMIS API 키 미설정 — application.yml에서 cert-key, cert-id를 설정하세요';
+
+    document.getElementById('config-grid').innerHTML = `
+      <div class="config-item"><span class="key">API 설정</span>
+        <span>${data.apiConfigured ? '<span class="badge badge-green">설정됨</span>' : '<span class="badge badge-yellow">미설정</span>'}</span></div>
+      <div class="config-item"><span class="key">cert-key</span>
+        <span>${data.certKeySet ? '<span class="badge badge-green">입력됨</span>' : '<span class="badge badge-red">없음</span>'}</span></div>
+      <div class="config-item"><span class="key">cert-id</span>
+        <span>${data.certIdSet ? '<span class="badge badge-green">입력됨</span>' : '<span class="badge badge-red">없음</span>'}</span></div>`;
+  } catch (e) {
+    document.getElementById('status-dot').className = 'dot error';
+    document.getElementById('status-text').textContent = '서버 연결 실패 — Spring Boot가 실행 중인지 확인하세요';
+  }
+}
+
+function selectCat(el) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('batch-category').value = el.dataset.code;
+}
+
+async function runBatch() {
+  const category = document.getElementById('batch-category').value.trim() || '200';
+  const regDay = document.getElementById('batch-regday').value;
+  const btn = document.getElementById('btn-run');
+
+  btn.disabled = true;
+  document.getElementById('run-spinner').classList.add('show');
+  document.getElementById('run-result').innerHTML = '';
+
+  try {
+    const res = await fetch(`${BASE}/api/batch/run?itemCategoryCode=${encodeURIComponent(category)}&regDay=${encodeURIComponent(regDay)}`, { method: 'POST' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('run-result').innerHTML = `
+        <div class="alert alert-ok">✅ 배치 실행 완료</div>
+        <div class="json-block">${JSON.stringify(data, null, 2)}</div>`;
+      loadHistory();
+    } else {
+      document.getElementById('run-result').innerHTML = `<div class="alert alert-err">❌ 실패: ${data.message}</div>`;
+    }
+  } catch (e) {
+    document.getElementById('run-result').innerHTML = `<div class="alert alert-err">❌ 오류: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('run-spinner').classList.remove('show');
+  }
+}
+
+async function loadHistory() {
+  document.getElementById('history-spinner').classList.add('show');
+  document.getElementById('history-result').innerHTML = '';
+
+  try {
+    const res = await fetch(`${BASE}/api/batch/status`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    if (!data.success) {
+      document.getElementById('history-result').innerHTML = `<div class="alert alert-err">${data.message}</div>`;
+      return;
+    }
+
+    const items = data.data || [];
+    if (!items.length) {
+      document.getElementById('history-result').innerHTML = `<div class="empty"><div class="ico">📋</div>실행 이력이 없습니다. 위에서 배치를 실행해보세요.</div>`;
+      return;
+    }
+
+    document.getElementById('history-result').innerHTML = items.map(item => {
+      const sc = item.status === 'COMPLETED' ? 'badge-green' : item.status === 'FAILED' ? 'badge-red' : 'badge-yellow';
+      const params = item.params
+        ? Object.entries(item.params).filter(([k]) => k !== 'timestamp').map(([k, v]) => `${k}: <strong>${v}</strong>`).join(' &nbsp;|&nbsp; ')
+        : '';
+      return `
+        <div class="history-item">
+          <div class="history-row">
+            <div><span class="history-title">${item.jobName}</span><span class="history-id">#${item.jobInstanceId}</span></div>
+            <span class="badge ${sc}">${item.status || 'UNKNOWN'}</span>
+          </div>
+          <div class="history-time">
+            ${item.startTime ? '시작 ' + item.startTime.replace('T', ' ').slice(0, 19) : ''}
+            ${item.endTime ? ' → ' + item.endTime.replace('T', ' ').slice(0, 19) : ''}
+          </div>
+          ${params ? `<div class="history-params">${params}</div>` : ''}
+        </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('history-result').innerHTML = `<div class="alert alert-err">오류: ${e.message}</div>`;
+  } finally {
+    document.getElementById('history-spinner').classList.remove('show');
+  }
+}
+
+checkStatus();
+loadHistory();
+</script>
+</body>
+</html>

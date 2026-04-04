@@ -1,0 +1,160 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.springframework.boot",
+    "module": "spring-boot-jdbc",
+    "version": "4.0.5",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-sql",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-transaction",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework",
+          "module": "spring-jdbc",
+          "version": {
+            "requires": "7.0.6"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-jdbc-4.0.5.jar",
+          "url": "spring-boot-jdbc-4.0.5.jar",
+          "size": 201324,
+          "sha512": "aef29258d7aac7a16bb786a97fe8201efef9d60579f794a9fef052b002d051103c4850374cdbafed3614299e25428f0d912a914156e4b4ea99895af4a1de8397",
+          "sha256": "6f9fe1697a2990c37dff57d51108ce679c748bf274489b5a6f6b552004b8efbc",
+          "sha1": "91b50419766f999c4a7c155d74955a67ad00237d",
+          "md5": "d97a00d770d30ffd7d636bb35997e68c"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-sql",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-transaction",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework",
+          "module": "spring-jdbc",
+          "version": {
+            "requires": "7.0.6"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-jdbc-4.0.5.jar",
+          "url": "spring-boot-jdbc-4.0.5.jar",
+          "size": 201324,
+          "sha512": "aef29258d7aac7a16bb786a97fe8201efef9d60579f794a9fef052b002d051103c4850374cdbafed3614299e25428f0d912a914156e4b4ea99895af4a1de8397",
+          "sha256": "6f9fe1697a2990c37dff57d51108ce679c748bf274489b5a6f6b552004b8efbc",
+          "sha1": "91b50419766f999c4a7c155d74955a67ad00237d",
+          "md5": "d97a00d770d30ffd7d636bb35997e68c"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-jdbc-4.0.5-javadoc.jar",
+          "url": "spring-boot-jdbc-4.0.5-javadoc.jar",
+          "size": 287710,
+          "sha512": "9f68e3d3dcdce1071a88a3dc4afb047e5013b6c0a5980846a74023a5b22567ee60b6e64bac852aa3ffbe351d7f57ad8886c9e236c1e35588d034f42f9428ccd3",
+          "sha256": "23dcf875e44015a2e704e37240ac3a5b54666d7f6bc2cc91ac95d62ec81cf0eb",
+          "sha1": "a5d9d2c8c684f442f02759cf8823c841106b76ba",
+          "md5": "7fd45a63f08869e5464b26ee26ad3207"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-jdbc-4.0.5-sources.jar",
+          "url": "spring-boot-jdbc-4.0.5-sources.jar",
+          "size": 115502,
+          "sha512": "c321bbfca036183db943cfab4e142ad9d4777c13faffce6a43bc9e9132b47bfdf9f0e4a9a4bceee7782860d8b085cb067756dd2cdb5e9d34c0ddaff00f621f20",
+          "sha256": "503a7dd2a1bb52653b906fe18abcb8874b2b6901c310feaf5e20836403f81dde",
+          "sha1": "af05f15b87985481cb3e596377b577b42f4b070f",
+          "md5": "b44a4a09c9e9e8a86a416c664394c484"
+        }
+      ]
+    }
+  ]
+}

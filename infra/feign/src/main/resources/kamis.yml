@@ -1,0 +1,5 @@
+kamis:
+  api:
+    cert-key: ${CERT_KEY}
+    cert-id: ${CERT_ID}
+    mock-mode: false

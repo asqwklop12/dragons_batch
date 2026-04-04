@@ -1,0 +1,10 @@
+
+spring:
+  config:
+    import:
+      - kamis.yml
+rest-feign:
+  policies:
+    default:
+      connect-timeout: 3
+      read-timeout: 100

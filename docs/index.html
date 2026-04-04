@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAMIS 농산물 가격 정보</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f0f4f8;
+    --white: #ffffff;
+    --border: #e2e8f0;
+    --accent: #2e7d32;
+    --accent-light: #e8f5e9;
+    --accent2: #f57c00;
+    --accent2-light: #fff3e0;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --red: #c62828;
+    --radius: 12px;
+    --shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--accent);
+    color: white;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left .logo { font-size: 24px; }
+  .header-left h1 { font-size: 17px; font-weight: 700; }
+  .header-left p { font-size: 11px; opacity: .75; }
+
+  .header-nav a {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.3);
+    transition: all .15s;
+  }
+  .header-nav a:hover { background: rgba(255,255,255,.15); color: white; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+    color: white;
+    padding: 48px 32px 40px;
+    text-align: center;
+  }
+  .hero h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .hero p { font-size: 14px; opacity: .8; margin-bottom: 28px; }
+
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .search-bar input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    outline: none;
+    color: var(--text);
+  }
+  .search-bar button {
+    padding: 12px 20px;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .search-bar button:hover { background: #e65100; }
+
+  /* Main layout */
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Category tabs */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .cat-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 50px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all .15s;
+    box-shadow: var(--shadow);
+  }
+  .cat-tab .emoji { font-size: 16px; }
+  .cat-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-tab.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+  /* Grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 800px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .hero h2 { font-size: 22px; }
+    header { padding: 0 16px; }
+    main { padding: 20px 16px; }
+  }
+
+  /* Card */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-head {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-head h3 { font-size: 14px; font-weight: 700; }
+  .card-head .meta { font-size: 11px; color: var(--text-muted); }
+
+  .card-body { padding: 20px; }
+
+  /* Chart container */
+  .chart-wrap {
+    position: relative;
+    height: 280px;
+  }
+
+  /* Price cards */
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .price-card {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    transition: box-shadow .15s;
+    cursor: default;
+  }
+  .price-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+
+  .price-card .item-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .price-card .item-kind { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .price-card .item-price { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .price-card .item-unit { font-size: 11px; color: var(--text-muted); }
+  .price-card .item-market { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: #f7fafc;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7fafc; }
+  .price-val { font-weight: 700; color: var(--accent); }
+
+  /* State */
+  .loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .loading.show { display: flex; }
+  .spin {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty .ico { font-size: 36px; margin-bottom: 8px; }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .alert-warn { background: #fff8e1; border: 1px solid #ffe082; color: #e65100; }
+  .alert-error { background: #ffebee; border: 1px solid #ef9a9a; color: var(--red); }
+  .alert-info { background: var(--accent-light); border: 1px solid #a5d6a7; color: var(--accent); }
+
+  /* Date picker row */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-row label { font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+  .filter-row input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    background: var(--white);
+  }
+  .filter-row input:focus { border-color: var(--accent); }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-green { background: var(--accent); color: white; }
+  .btn-green:hover { background: #1b5e20; }
+  .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* rank badge */
+  .rank { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .rank-상품 { background: #e8f5e9; color: #2e7d32; }
+  .rank-중품 { background: #fff3e0; color: #e65100; }
+  .rank-하품 { background: #fce4ec; color: #c62828; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">🌾</div>
+    <div>
+      <h1>KAMIS 농산물 가격 정보</h1>
+      <p>농산물유통정보 실시간 가격 조회</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="/batch.html">⚙️ 배치 관리</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h2>오늘의 농산물 가격은?</h2>
+  <p>품목명을 검색하거나 카테고리를 선택해 가격 정보를 확인하세요</p>
+  <div class="search-bar">
+    <input type="text" id="hero-search" placeholder="예: 배추, 사과, 쌀..." onkeydown="if(event.key==='Enter') heroSearch()">
+    <button onclick="heroSearch()">🔍 검색</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- 카테고리 탭 -->
+  <div class="section-title">📂 카테고리별 가격 조회</div>
+  <div class="category-tabs">
+    <div class="cat-tab active" data-code="100" onclick="selectCategory(this)"><span class="emoji">🌾</span>식량작물</div>
+    <div class="cat-tab" data-code="200" onclick="selectCategory(this)"><span class="emoji">🥬</span>채소류</div>
+    <div class="cat-tab" data-code="300" onclick="selectCategory(this)"><span class="emoji">🌿</span>특용작물</div>
+    <div class="cat-tab" data-code="400" onclick="selectCategory(this)"><span class="emoji">🍎</span>과일류</div>
+    <div class="cat-tab" data-code="500" onclick="selectCategory(this)"><span class="emoji">🥩</span>축산물</div>
+    <div class="cat-tab" data-code="600" onclick="selectCategory(this)"><span class="emoji">🐟</span>수산물</div>
+  </div>
+
+  <!-- 날짜 필터 -->
+  <div class="filter-row">
+    <label>조회 날짜</label>
+    <input type="date" id="main-date">
+    <button class="btn btn-green" onclick="loadCategoryData()">조회</button>
+    <button class="btn btn-outline" onclick="loadLatest()">최신 데이터</button>
+  </div>
+
+  <!-- 차트 + 카드 그리드 -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <h3 id="chart-title">가격 비교 차트</h3>
+        <span class="meta" id="chart-meta"></span>
+      </div>
+      <div class="card-body">
+        <div class="loading" id="chart-loading"><div class="spin"></div> 데이터 불러오는 중...</div>
+        <div class="chart-wrap" id="chart-wrap" style="display:none">
+          <canvas id="priceChart"></canvas>
+        </div>
+        <div class="empty" id="chart-empty" style="display:none">
+          <div class="ico">📊</div>
+          <div>먼저 데이터를 수집해주세요<br><small>배치를 실행하면 데이터가 저장됩니다</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>품목 가격 카드</h3>
+        <span class="meta" id="cards-meta"></span>
+      </div>
+      <div class="card-body">
+        <div class="loading" id="cards-loading"><div class="spin"></div></div>
+        <div class="price-grid" id="price-cards"></div>
+        <div class="empty" id="cards-empty" style="display:none">
+          <div class="ico">📭</div><div>데이터 없음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 테이블 -->
+  <div class="card">
+    <div class="card-head">
+      <h3 id="table-title">전체 가격 목록</h3>
+      <span class="meta" id="table-meta"></span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="loading" id="table-loading" style="padding:40px"><div class="spin"></div> 불러오는 중...</div>
+      <div class="table-wrap" id="table-wrap" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th>품목</th><th>품종</th><th>등급</th><th>시장</th><th>가격</th><th>단위</th><th>날짜</th>
+            </tr>
+          </thead>
+          <tbody id="price-tbody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="table-empty" style="display:none">
+        <div class="ico">📭</div><div>데이터가 없습니다</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BASE = '';
+let chart = null;
+let currentCategory = '100';
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+document.getElementById('main-date').value = today();
+
+// 카테고리 선택
+function selectCategory(el) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentCategory = el.dataset.code;
+  loadLatest();
+}
+
+// 최신 데이터 로드
+async function loadLatest() {
+  await fetchAndRender(`${BASE}/api/prices/latest?limit=50`);
+}
+
+// 날짜별 조회
+async function loadCategoryData() {
+  const date = document.getElementById('main-date').value;
+  if (!date) {
+    await loadLatest();
+    return;
+  }
+  await fetchAndRender(`${BASE}/api/prices?regDay=${encodeURIComponent(date)}`);
+}
+
+// 검색
+async function heroSearch() {
+  const name = document.getElementById('hero-search').value.trim();
+  if (!name) return;
+  await fetchAndRender(`${BASE}/api/prices/search?itemName=${encodeURIComponent(name)}`, `"${name}" 검색 결과`);
+}
+
+// 공통 데이터 렌더링
+async function fetchAndRender(url, label = null) {
+  setLoading(true);
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    const items = json.data || [];
+    renderAll(items, label);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  ['chart-loading', 'cards-loading', 'table-loading'].forEach(id => {
+    document.getElementById(id).classList.toggle('show', on);
+  });
+  if (on) {
+    document.getElementById('chart-wrap').style.display = 'none';
+    document.getElementById('chart-empty').style.display = 'none';
+    document.getElementById('cards-empty').style.display = 'none';
+    document.getElementById('table-wrap').style.display = 'none';
+    document.getElementById('table-empty').style.display = 'none';
+    document.getElementById('price-cards').innerHTML = '';
+  }
+}
+
+function renderAll(items, label) {
+  const title = label || (document.querySelector('.cat-tab.active')?.textContent.trim() || '');
+  document.getElementById('chart-title').textContent = `${title} 가격 비교`;
+  document.getElementById('table-title').textContent = `${title} 가격 목록`;
+  document.getElementById('chart-meta').textContent = `${items.length}건`;
+  document.getElementById('cards-meta').textContent = `${items.length}건`;
+  document.getElementById('table-meta').textContent = `총 ${items.length}건`;
+
+  renderChart(items);
+  renderCards(items);
+  renderTable(items);
+}
+
+function renderChart(items) {
+  document.getElementById('chart-loading').classList.remove('show');
+
+  if (!items.length) {
+    document.getElementById('chart-wrap').style.display = 'none';
+    document.getElementById('chart-empty').style.display = 'block';
+    return;
+  }
+
+  // 품목별 평균가격 집계 (상위 10개)
+  const map = {};
+  items.forEach(it => {
+    if (!it.price) return;
+    const key = it.itemName;
+    if (!map[key]) map[key] = { total: 0, count: 0 };
+    map[key].total += it.price;
+    map[key].count += 1;
+  });
+
+  const sorted = Object.entries(map)
+    .map(([name, v]) => ({ name, avg: Math.round(v.total / v.count) }))
+    .sort((a, b) => b.avg - a.avg)
+    .slice(0, 10);
+
+  const labels = sorted.map(d => d.name);
+  const values = sorted.map(d => d.avg);
+
+  const colors = labels.map((_, i) => {
+    const hue = (i * 37 + 120) % 360;
+    return `hsl(${hue}, 60%, 55%)`;
+  });
+
+  document.getElementById('chart-wrap').style.display = 'block';
+  document.getElementById('chart-empty').style.display = 'none';
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '평균 가격 (원)',
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y.toLocaleString()}원`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => v.toLocaleString() + '원',
+            font: { size: 11 }
+          },
+          grid: { color: '#f0f4f8' }
+        },
+        x: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderCards(items) {
+  document.getElementById('cards-loading').classList.remove('show');
+  const container = document.getElementById('price-cards');
+
+  if (!items.length) {
+    document.getElementById('cards-empty').style.display = 'block';
+    return;
+  }
+
+  // 품목별 최저가 대표 항목
+  const seen = new Set();
+  const unique = items.filter(it => {
+    if (seen.has(it.itemName)) return false;
+    seen.add(it.itemName);
+    return true;
+  }).slice(0, 12);
+
+  container.innerHTML = unique.map(it => `
+    <div class="price-card">
+      <div class="item-name">${it.itemName}</div>
+      <div class="item-kind">${it.kindName || ''}</div>
+      <div class="item-price">${it.price != null ? it.price.toLocaleString() : '-'}원</div>
+      <div class="item-unit">${it.unit || ''}</div>
+      <div class="item-market">📍 ${it.marketName || '-'}</div>
+    </div>
+  `).join('');
+}
+
+function renderTable(items) {
+  document.getElementById('table-loading').classList.remove('show');
+
+  if (!items.length) {
+    document.getElementById('table-empty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('table-wrap').style.display = 'block';
+  document.getElementById('price-tbody').innerHTML = items.map(r => `
+    <tr>
+      <td><strong>${r.itemName || '-'}</strong></td>
+      <td>${r.kindName || '-'}</td>
+      <td><span class="rank rank-${r.rankName}">${r.rankName || '-'}</span></td>
+      <td>${r.marketName || '-'}</td>
+      <td class="price-val">${r.price != null ? r.price.toLocaleString() + '원' : '-'}</td>
+      <td>${r.unit || '-'}</td>
+      <td>${r.regDay || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function showError(msg) {
+  document.getElementById('chart-wrap').style.display = 'none';
+  document.getElementById('chart-empty').style.display = 'block';
+  document.getElementById('chart-empty').innerHTML = `<div class="alert alert-error">오류: ${msg}</div>`;
+}
+
+// 초기 로드
+loadLatest();
+</script>
+</body>
+</html>

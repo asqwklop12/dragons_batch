@@ -1,0 +1,132 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.springframework.boot",
+    "module": "spring-boot-starter-json",
+    "version": "4.0.5",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.4.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-starter",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-jackson",
+          "version": {
+            "requires": "4.0.5"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-starter-json-4.0.5.jar",
+          "url": "spring-boot-starter-json-4.0.5.jar",
+          "size": 4749,
+          "sha512": "b51ea3b2e1d649cb964e34456abab1db40e28eac8b08be92066b6d9b9e88f0b539c7985357a5d6b4f1fae16f7e841efbcc229e2cb4c7fb8cbd8c4c9d78a9b1ed",
+          "sha256": "7d3492f3ac1f51c2d1ca3161014965328b1ada02d93b0c6be2d8936507a58a9e",
+          "sha1": "5a3b960380c26cec130c3dbd6f89f2e0735cf213",
+          "md5": "df0c25de4e1289751f0848ff3167143d"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-starter",
+          "version": {
+            "requires": "4.0.5"
+          }
+        },
+        {
+          "group": "org.springframework.boot",
+          "module": "spring-boot-jackson",
+          "version": {
+            "requires": "4.0.5"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "spring-boot-starter-json-4.0.5.jar",
+          "url": "spring-boot-starter-json-4.0.5.jar",
+          "size": 4749,
+          "sha512": "b51ea3b2e1d649cb964e34456abab1db40e28eac8b08be92066b6d9b9e88f0b539c7985357a5d6b4f1fae16f7e841efbcc229e2cb4c7fb8cbd8c4c9d78a9b1ed",
+          "sha256": "7d3492f3ac1f51c2d1ca3161014965328b1ada02d93b0c6be2d8936507a58a9e",
+          "sha1": "5a3b960380c26cec130c3dbd6f89f2e0735cf213",
+          "md5": "df0c25de4e1289751f0848ff3167143d"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-starter-json-4.0.5-javadoc.jar",
+          "url": "spring-boot-starter-json-4.0.5-javadoc.jar",
+          "size": 4749,
+          "sha512": "b51ea3b2e1d649cb964e34456abab1db40e28eac8b08be92066b6d9b9e88f0b539c7985357a5d6b4f1fae16f7e841efbcc229e2cb4c7fb8cbd8c4c9d78a9b1ed",
+          "sha256": "7d3492f3ac1f51c2d1ca3161014965328b1ada02d93b0c6be2d8936507a58a9e",
+          "sha1": "5a3b960380c26cec130c3dbd6f89f2e0735cf213",
+          "md5": "df0c25de4e1289751f0848ff3167143d"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "spring-boot-starter-json-4.0.5-sources.jar",
+          "url": "spring-boot-starter-json-4.0.5-sources.jar",
+          "size": 4749,
+          "sha512": "b51ea3b2e1d649cb964e34456abab1db40e28eac8b08be92066b6d9b9e88f0b539c7985357a5d6b4f1fae16f7e841efbcc229e2cb4c7fb8cbd8c4c9d78a9b1ed",
+          "sha256": "7d3492f3ac1f51c2d1ca3161014965328b1ada02d93b0c6be2d8936507a58a9e",
+          "sha1": "5a3b960380c26cec130c3dbd6f89f2e0735cf213",
+          "md5": "df0c25de4e1289751f0848ff3167143d"
+        }
+      ]
+    }
+  ]
+}

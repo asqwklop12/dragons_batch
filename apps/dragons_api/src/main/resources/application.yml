@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: dragons_api
+  config:
+    import:
+      - feign.yml
