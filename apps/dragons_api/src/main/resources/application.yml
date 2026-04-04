@@ -1,6 +1,9 @@
 spring:
   application:
     name: dragons_api
+  profiles:
+    default: local
   config:
     import:
       - feign.yml
+      - jpa.yml
