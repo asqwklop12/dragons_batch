@@ -7,3 +7,4 @@ spring:
     import:
       - feign.yml
       - jpa.yml
+      - logging.yml
