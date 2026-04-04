@@ -5,7 +5,9 @@ plugins {
 dependencies {
     implementation project(':common')
     implementation project(':domain')
+    implementation project(":infra:jpa")
     implementation project(':infra:feign')
+    implementation project(':infra:logging')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'

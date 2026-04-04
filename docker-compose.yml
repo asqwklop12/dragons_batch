@@ -14,8 +14,6 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql-data:/var/lib/mysql
-    networks:
-      - dragons_default
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
       interval: 10s
@@ -26,6 +24,3 @@ services:
 volumes:
   mysql-data:
 
-networks:
-  dragons_default:
-    name: dragons_default
