@@ -13,6 +13,6 @@ class KamisFeignClientTest {
     RecordComponent[] components = KamisMonthlyPriceResponse.KamisMonthlyPriceItem.class.getRecordComponents();
 
     assertThat(components).extracting(RecordComponent::getName)
-        .contains("itemCode", "itemName", "kindCode", "marketCode", "dpr1", "productClsCode");
+        .containsExactlyInAnyOrder("itemCode", "itemName", "kindCode", "marketCode", "dpr1", "productClsCode");
   }
 }

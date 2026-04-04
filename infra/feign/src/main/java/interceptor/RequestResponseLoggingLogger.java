@@ -9,11 +9,16 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 @Slf4j
 public class RequestResponseLoggingLogger extends Logger {
+
+  private static final Set<String> SENSITIVE_QUERY_PARAMS = Set.of(
+      "p_cert_key", "p_cert_id", "cert", "key", "id"
+  );
 
   @Override
   protected void log(String configKey, String format, Object... args) {
@@ -29,7 +34,7 @@ public class RequestResponseLoggingLogger extends Logger {
 
     log.info("REQ_RES method={} uri={} status={} time={}ms requestId={}",
         request.httpMethod(),
-        request.url(),
+        sanitizeUrl(request.url()),
         response.status(),
         elapsedTime,
         resolveRequestId(request));
@@ -116,5 +121,50 @@ public class RequestResponseLoggingLogger extends Logger {
       return str;
     }
     return str.substring(0, maxLength) + "...(truncated)";
+  }
+
+  /**
+   * Sanitizes URL by masking sensitive query parameter values.
+   *
+   * @param url The URL to sanitize
+   * @return The sanitized URL with sensitive query param values replaced with "****"
+   */
+  private String sanitizeUrl(String url) {
+    if (url == null || !url.contains("?")) {
+      return url;
+    }
+
+    int queryStart = url.indexOf('?');
+    String baseUrl = url.substring(0, queryStart + 1);
+    String queryString = url.substring(queryStart + 1);
+
+    String[] params = queryString.split("&");
+    StringBuilder sanitized = new StringBuilder(baseUrl);
+
+    for (int i = 0; i < params.length; i++) {
+      if (i > 0) {
+        sanitized.append("&");
+      }
+
+      String param = params[i];
+      int equalsIndex = param.indexOf('=');
+
+      if (equalsIndex == -1) {
+        sanitized.append(param);
+        continue;
+      }
+
+      String key = param.substring(0, equalsIndex);
+      String value = param.substring(equalsIndex + 1);
+
+      sanitized.append(key).append("=");
+      if (SENSITIVE_QUERY_PARAMS.contains(key)) {
+        sanitized.append("****");
+      } else {
+        sanitized.append(value);
+      }
+    }
+
+    return sanitized.toString();
   }
 }
