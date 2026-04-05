@@ -37,7 +37,6 @@ public class FeignConfig {
         .logger(new RequestResponseLoggingLogger());
   }
 
-
   @Bean
   public Feign.Builder feignBuilder(
       FeignProperties properties) {
