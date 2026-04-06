@@ -38,6 +38,15 @@ class ApiControllerTest {
   }
 
   @Test
+  void searchPricesReturnsMatchingItem() throws Exception {
+    HttpResponse<String> response = sendGet("/api/prices/search?itemName=사과");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"data\":{\"count\":1");
+    assertThat(response.body()).contains("\"itemName\":\"사과\"");
+  }
+
+  @Test
   void runBatchReturnsBatchExecutionResult() throws Exception {
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(baseUrl() + "/api/batch/run?itemCategoryCode=200&regDay=2024-01-15"))
