@@ -3,10 +3,10 @@ package com.dragons.application.price;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
+import com.dragons.application.price.dto.PriceListResult;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import com.dragons.interfaces.api.price.dto.PriceListResponse;
 import model.price.PriceData;
 import model.price.PriceDataRepository;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class PriceQueryServiceTest {
             )
         );
 
-    PriceListResponse response = priceQueryService.getPricesByDate("2024-01-15");
+    PriceListResult response = priceQueryService.getPricesByDate("2024-01-15");
 
     assertThat(response.count()).isEqualTo(2);
     assertThat(response.data())
@@ -47,7 +47,7 @@ class PriceQueryServiceTest {
     given(priceDataRepository.pricesMatchingItemName("사과"))
         .willReturn(List.of(priceData(3L, "211", "사과", "2024-01-16", "2024-01-16T09:10:00")));
 
-    PriceListResponse response = priceQueryService.searchPrices("사과");
+    PriceListResult response = priceQueryService.searchPrices("사과");
 
     assertThat(response.count()).isEqualTo(1);
     assertThat(response.data().getFirst().itemCode()).isEqualTo("211");
@@ -63,7 +63,7 @@ class PriceQueryServiceTest {
             )
         );
 
-    PriceListResponse response = priceQueryService.getLatestPrices(2);
+    PriceListResult response = priceQueryService.getLatestPrices(2);
 
     assertThat(response.count()).isEqualTo(2);
     assertThat(response.data())

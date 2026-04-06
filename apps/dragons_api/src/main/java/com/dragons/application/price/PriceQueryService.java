@@ -1,11 +1,10 @@
 package com.dragons.application.price;
 
-import com.dragons.interfaces.api.price.dto.PriceItemResponse;
-import com.dragons.interfaces.api.price.dto.PriceListResponse;
+import com.dragons.application.price.dto.PriceItemResult;
+import com.dragons.application.price.dto.PriceListResult;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import model.price.PriceData;
 import model.price.PriceDataRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,43 +14,25 @@ public class PriceQueryService {
 
   private final PriceDataRepository priceDataRepository;
 
-  public PriceListResponse getPricesByDate(String regDay) {
-    List<PriceItemResponse> items = priceDataRepository.pricesOn(LocalDate.parse(regDay)).stream()
-        .map(this::toResponse)
+  public PriceListResult getPricesByDate(String regDay) {
+    List<PriceItemResult> items = priceDataRepository.pricesOn(LocalDate.parse(regDay)).stream()
+        .map(PriceItemResult::from)
         .toList();
-    return PriceListResponse.of(items);
+    return PriceListResult.of(items);
   }
 
-  public PriceListResponse searchPrices(String itemName) {
-    List<PriceItemResponse> items = priceDataRepository.pricesMatchingItemName(itemName).stream()
-        .map(this::toResponse)
+  public PriceListResult searchPrices(String itemName) {
+    List<PriceItemResult> items = priceDataRepository.pricesMatchingItemName(itemName).stream()
+        .map(PriceItemResult::from)
         .toList();
-    return PriceListResponse.of(items);
+    return PriceListResult.of(items);
   }
 
-  public PriceListResponse getLatestPrices(Integer limit) {
+  public PriceListResult getLatestPrices(Integer limit) {
     int safeLimit = Math.max(limit, 0);
-    List<PriceItemResponse> items = priceDataRepository.latestPrices(safeLimit).stream()
-        .map(this::toResponse)
+    List<PriceItemResult> items = priceDataRepository.latestPrices(safeLimit).stream()
+        .map(PriceItemResult::from)
         .toList();
-    return PriceListResponse.of(items);
-  }
-
-  private PriceItemResponse toResponse(PriceData priceData) {
-    return new PriceItemResponse(
-        priceData.getId(),
-        priceData.getItemCode(),
-        priceData.getItemName(),
-        priceData.getKindCode(),
-        priceData.getKindName(),
-        priceData.getMarketCode(),
-        priceData.getMarketName(),
-        priceData.getRankCode(),
-        priceData.getRankName(),
-        priceData.getPrice(),
-        priceData.getUnit(),
-        priceData.getRegDay().toString(),
-        priceData.getCreatedAt().toString()
-    );
+    return PriceListResult.of(items);
   }
 }

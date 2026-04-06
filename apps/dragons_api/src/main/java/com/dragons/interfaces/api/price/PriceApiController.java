@@ -26,18 +26,18 @@ public class PriceApiController {
   @GetMapping
   @Operation(summary = "날짜별 가격 조회")
   public ApiResponse<PriceListResponse> getPricesByDate(@ModelAttribute GetPricesRequest request) {
-    return ApiResponse.successResponse(priceQueryService.getPricesByDate(request.regDay()));
+    return ApiResponse.successResponse(PriceListResponse.from(priceQueryService.getPricesByDate(request.regDay())));
   }
 
   @GetMapping("/search")
   @Operation(summary = "품목명 검색")
   public ApiResponse<PriceListResponse> searchPrices(@ModelAttribute SearchPricesRequest request) {
-    return ApiResponse.successResponse(priceQueryService.searchPrices(request.itemName()));
+    return ApiResponse.successResponse(PriceListResponse.from(priceQueryService.searchPrices(request.itemName())));
   }
 
   @GetMapping("/latest")
   @Operation(summary = "최근 저장 데이터 조회")
   public ApiResponse<PriceListResponse> getLatestPrices(@Parameter @ModelAttribute LatestPricesRequest request) {
-    return ApiResponse.successResponse(priceQueryService.getLatestPrices(request.limit()));
+    return ApiResponse.successResponse(PriceListResponse.from(priceQueryService.getLatestPrices(request.limit())));
   }
 }
