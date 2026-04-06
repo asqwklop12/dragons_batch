@@ -5,9 +5,9 @@ import java.util.List;
 
 public interface PriceDataRepository {
 
-  List<PriceData> findByRegDay(LocalDate regDay);
+  List<PriceData> pricesOn(LocalDate regDay);
 
-  List<PriceData> findByItemNameContaining(String itemName);
+  List<PriceData> pricesMatchingItemName(String itemName);
 
-  List<PriceData> findLatest(int limit);
+  List<PriceData> latestPrices(int limit);
 }

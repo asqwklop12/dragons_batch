@@ -16,14 +16,14 @@ public class PriceQueryService {
   private final PriceDataRepository priceDataRepository;
 
   public PriceListResponse getPricesByDate(String regDay) {
-    List<PriceItemResponse> items = priceDataRepository.findByRegDay(LocalDate.parse(regDay)).stream()
+    List<PriceItemResponse> items = priceDataRepository.pricesOn(LocalDate.parse(regDay)).stream()
         .map(this::toResponse)
         .toList();
     return PriceListResponse.of(items);
   }
 
   public PriceListResponse searchPrices(String itemName) {
-    List<PriceItemResponse> items = priceDataRepository.findByItemNameContaining(itemName).stream()
+    List<PriceItemResponse> items = priceDataRepository.pricesMatchingItemName(itemName).stream()
         .map(this::toResponse)
         .toList();
     return PriceListResponse.of(items);
@@ -31,7 +31,7 @@ public class PriceQueryService {
 
   public PriceListResponse getLatestPrices(Integer limit) {
     int safeLimit = Math.max(limit, 0);
-    List<PriceItemResponse> items = priceDataRepository.findLatest(safeLimit).stream()
+    List<PriceItemResponse> items = priceDataRepository.latestPrices(safeLimit).stream()
         .map(this::toResponse)
         .toList();
     return PriceListResponse.of(items);

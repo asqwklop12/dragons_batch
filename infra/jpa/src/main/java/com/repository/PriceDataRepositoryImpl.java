@@ -15,17 +15,17 @@ public class PriceDataRepositoryImpl implements PriceDataRepository {
   private final JpaPriceDataRepository repository;
 
   @Override
-  public List<PriceData> findByRegDay(LocalDate regDay) {
+  public List<PriceData> pricesOn(LocalDate regDay) {
     return repository.findAllByRegDayOrderByCreatedAtDesc(regDay);
   }
 
   @Override
-  public List<PriceData> findByItemNameContaining(String itemName) {
+  public List<PriceData> pricesMatchingItemName(String itemName) {
     return repository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDesc(itemName);
   }
 
   @Override
-  public List<PriceData> findLatest(int limit) {
+  public List<PriceData> latestPrices(int limit) {
     if (limit <= 0) {
       return List.of();
     }

@@ -26,7 +26,7 @@ class PriceQueryServiceTest {
 
   @Test
   void getPricesByDateFiltersByRegDay() {
-    given(priceDataRepository.findByRegDay(LocalDate.parse("2024-01-15")))
+    given(priceDataRepository.pricesOn(LocalDate.parse("2024-01-15")))
         .willReturn(
             List.of(
                 priceData(1L, "111", "배추", "2024-01-15", "2024-01-15T10:30:00"),
@@ -44,7 +44,7 @@ class PriceQueryServiceTest {
 
   @Test
   void searchPricesFindsMatchingItemName() {
-    given(priceDataRepository.findByItemNameContaining("사과"))
+    given(priceDataRepository.pricesMatchingItemName("사과"))
         .willReturn(List.of(priceData(3L, "211", "사과", "2024-01-16", "2024-01-16T09:10:00")));
 
     PriceListResponse response = priceQueryService.searchPrices("사과");
@@ -55,7 +55,7 @@ class PriceQueryServiceTest {
 
   @Test
   void getLatestPricesAppliesRequestedLimitInCreatedAtOrder() {
-    given(priceDataRepository.findLatest(2))
+    given(priceDataRepository.latestPrices(2))
         .willReturn(
             List.of(
                 priceData(4L, "311", "양파", "2024-01-17", "2024-01-17T08:45:00"),
