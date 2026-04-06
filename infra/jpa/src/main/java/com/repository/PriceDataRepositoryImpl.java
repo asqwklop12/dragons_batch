@@ -16,12 +16,12 @@ public class PriceDataRepositoryImpl implements PriceDataRepository {
 
   @Override
   public List<PriceData> pricesOn(LocalDate regDay) {
-    return repository.findAllByRegDayOrderByCreatedAtDesc(regDay);
+    return repository.findAllByRegDayOrderByCreatedAtDescIdDesc(regDay);
   }
 
   @Override
   public List<PriceData> pricesMatchingItemName(String itemName) {
-    return repository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDesc(itemName);
+    return repository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc(itemName);
   }
 
   @Override
@@ -29,6 +29,6 @@ public class PriceDataRepositoryImpl implements PriceDataRepository {
     if (limit <= 0) {
       return List.of();
     }
-    return repository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit));
+    return repository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, limit));
   }
 }
