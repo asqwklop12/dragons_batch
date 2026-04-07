@@ -1,4 +1,4 @@
-package interceptor;
+package com.interceptor;
 
 import constant.Constants;
 import feign.RequestInterceptor;

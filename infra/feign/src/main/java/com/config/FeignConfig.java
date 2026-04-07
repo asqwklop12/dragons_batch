@@ -1,21 +1,18 @@
-package config;
+package com.config;
 
+import com.interceptor.MdcInterceptor;
+import com.interceptor.RequestResponseLoggingLogger;
+import com.properties.FeignProperties;
+import com.properties.FeignProperties.FeignProperty;
 import constant.Constants;
 import feign.Feign;
 import feign.Request;
-import interceptor.MdcInterceptor;
-import interceptor.RequestResponseLoggingLogger;
 import java.time.Duration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import properties.FeignProperties;
-import properties.FeignProperties.FeignProperty;
 
 @Configuration
-@EnableConfigurationProperties(FeignProperties.class)
 public class FeignConfig {
-
 
   private Feign.Builder createFeignBuilder(
       String policyName,

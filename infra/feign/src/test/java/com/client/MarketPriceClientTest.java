@@ -1,16 +1,16 @@
-package client;
+package com.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dto.KamisMonthlyPriceResponse;
+import com.dto.MarketPriceMonthlyResponse;
 import java.lang.reflect.RecordComponent;
 import org.junit.jupiter.api.Test;
 
-class KamisFeignClientTest {
+class MarketPriceClientTest {
 
   @Test
   void monthlyPriceResponseUsesTypedRecordsInsteadOfMap() {
-    RecordComponent[] components = KamisMonthlyPriceResponse.KamisMonthlyPriceItem.class.getRecordComponents();
+    RecordComponent[] components = MarketPriceMonthlyResponse.MarketPriceMonthlyItem.class.getRecordComponents();
 
     assertThat(components).extracting(RecordComponent::getName)
         .contains("itemCode", "itemName", "kindCode", "marketCode", "dpr1", "productClsCode");

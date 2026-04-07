@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api 'org.springframework.cloud:spring-cloud-starter-openfeign:5.0.1'
+    implementation project(':domain')
     implementation project(':infra:jackson')
     implementation 'org.springframework.boot:spring-boot-starter'
 

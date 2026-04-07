@@ -1,4 +1,4 @@
-package properties;
+package com.properties;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

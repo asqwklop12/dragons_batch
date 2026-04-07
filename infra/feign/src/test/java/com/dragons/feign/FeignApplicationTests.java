@@ -1,6 +1,6 @@
 package com.dragons.feign;
 
-import config.FeignConfig;
+import com.config.FeignConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
