@@ -2,22 +2,46 @@ package com.dragons.interfaces.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.support.MySqlContainerTestSupport;
+import com.repository.JpaPriceDataRepository;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import model.price.PriceData;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-class ApiControllerTest {
+class ApiControllerTest extends MySqlContainerTestSupport {
 
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   @LocalServerPort
   private int port;
+
+  @Autowired
+  private JpaPriceDataRepository jpaPriceDataRepository;
+
+  @BeforeEach
+  void setUp() {
+    jpaPriceDataRepository.deleteAllInBatch();
+    jpaPriceDataRepository.saveAllAndFlush(
+        List.of(
+            priceData("111", "배추", "01", "일반", "100", "서울", "01", "상품", 12000, "10kg", "2024-01-15", "2024-01-15T10:30:00"),
+            priceData("112", "무", "01", "일반", "100", "서울", "01", "상품", 9800, "20kg", "2024-01-15", "2024-01-15T10:31:00"),
+            priceData("211", "사과", "02", "부사", "200", "대구", "01", "상품", 28500, "10kg", "2024-01-16", "2024-01-16T09:10:00"),
+            priceData("311", "양파", "01", "일반", "300", "부산", "02", "중품", 14300, "15kg", "2024-01-17", "2024-01-17T08:45:00")
+        )
+    );
+  }
 
   @Test
   void getPricesByDateReturnsExpectedData() throws Exception {
@@ -35,6 +59,15 @@ class ApiControllerTest {
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("\"data\":{\"count\":2");
+  }
+
+  @Test
+  void searchPricesReturnsMatchingItem() throws Exception {
+    HttpResponse<String> response = sendGet("/api/prices/search?itemName=사과");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"data\":{\"count\":1");
+    assertThat(response.body()).contains("\"itemName\":\"사과\"");
   }
 
   @Test
@@ -81,5 +114,35 @@ class ApiControllerTest {
 
   private String baseUrl() {
     return "http://localhost:" + port;
+  }
+
+  private PriceData priceData(
+      String itemCode,
+      String itemName,
+      String kindCode,
+      String kindName,
+      String marketCode,
+      String marketName,
+      String rankCode,
+      String rankName,
+      int price,
+      String unit,
+      String regDay,
+      String createdAt
+  ) {
+    return PriceData.create(
+        itemCode,
+        itemName,
+        kindCode,
+        kindName,
+        marketCode,
+        marketName,
+        rankCode,
+        rankName,
+        price,
+        unit,
+        LocalDate.parse(regDay),
+        LocalDateTime.parse(createdAt)
+    );
   }
 }
