@@ -6,28 +6,31 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MarketPriceDailyResponse(
-    MarketPriceDailyData data
+    String error_code,
+    List<List<String>> condition,
+    List<MarketPriceDailyItem> price
 ) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public record MarketPriceDailyData(
-      List<MarketPriceDailyItem> item
-  ) {
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record MarketPriceDailyItem(
-      @JsonProperty("itemcode") String itemCode,
+      @JsonProperty("productno") String productNo,
       @JsonProperty("item_name") String itemName,
-      @JsonProperty("kindcode") String kindCode,
-      @JsonProperty("kind_name") String kindName,
-      @JsonProperty("market_code") String marketCode,
-      @JsonProperty("marketname") String marketName,
-      @JsonProperty("rank_code") String rankCode,
-      @JsonProperty("rank") String rankName,
+      @JsonProperty("product_cls_code") String productClsCode,
+      @JsonProperty("product_cls_name") String productClsName,
+      @JsonProperty("category_code") String categoryCode,
+      @JsonProperty("category_name") String categoryName,
+      String productName,
       String unit,
       String day1,
-      String dpr1
+      String dpr1,
+      String day2,
+      String dpr2,
+      String day3,
+      String dpr3,
+      String day4,
+      String dpr4,
+      String direction,
+      String value
   ) {
   }
 }

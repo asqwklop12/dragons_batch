@@ -15,7 +15,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApiPriceSource implements PriceReader {
 
-  private static final DateTimeFormatter API_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+  private static final String DEFAULT_PERIOD = "3";
+  private static final String DEFAULT_ITEM_CODE = "111";
+  private static final String DEFAULT_KIND_CODE = "05";
+  private static final String DEFAULT_GRADE_RANK = "2";
+  private static final String DEFAULT_COUNTY_CODE = "1101";
 
   private final MarketPriceClient marketPriceClient;
   private final MarketPriceApiProperties marketPriceApiProperties;
@@ -24,28 +28,33 @@ public class ApiPriceSource implements PriceReader {
   public List<PriceReadItem> readOn(String itemCategoryCode, LocalDate regDay) {
     MarketPriceDailyResponse response = marketPriceClient.fetchDailyPricesInternal(
         "dailySalesList",
-        "json",
         marketPriceApiProperties.getCertKey(),
         marketPriceApiProperties.getCertId(),
+        "json",
         itemCategoryCode,
-        regDay.format(API_DATE_FORMAT),
-        "N"
+        DEFAULT_PERIOD,
+        "N",
+        String.valueOf(regDay.getYear()),
+        DEFAULT_ITEM_CODE,
+        DEFAULT_KIND_CODE,
+        DEFAULT_GRADE_RANK,
+        DEFAULT_COUNTY_CODE
     );
 
-    if (response == null || response.data() == null || response.data().item() == null) {
+    if (response == null || response.price() == null) {
       return List.of();
     }
 
-    return response.data().item().stream()
+    return response.price().stream()
         .map(item -> new PriceReadItem(
-            item.itemCode(),
+            item.productNo(),
             item.itemName(),
-            item.kindCode(),
-            item.kindName(),
-            item.marketCode(),
-            item.marketName(),
-            item.rankCode(),
-            item.rankName(),
+            item.productClsCode(),
+            item.productClsName(),
+            item.categoryCode(),
+            item.categoryName(),
+            "",
+            "",
             parsePrice(item.dpr1()),
             item.unit(),
             regDay

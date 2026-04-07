@@ -16,12 +16,17 @@ public interface MarketPriceClient {
   @GetMapping(value = "/service/price/xml.do", produces = "application/json")
   MarketPriceDailyResponse fetchDailyPricesInternal(
       @RequestParam("action") String requestAction,
-      @RequestParam("p_returntype") String responseFormat,
       @RequestParam("p_cert_key") String certificationKey,
       @RequestParam("p_cert_id") String certificationId,
-      @RequestParam("p_item_category_code") String itemCategoryCode,
-      @RequestParam("p_regday") String regDay,
-      @RequestParam("p_convert_kg_yn") String convertKgYn
+      @RequestParam("p_returntype") String responseFormat,
+      @RequestParam("p_itemcategorycode") String itemCategoryCode,
+      @RequestParam("p_period") String period,
+      @RequestParam("p_convert_kg_yn") String convertKgYn,
+      @RequestParam("p_yyyy") String targetYear,
+      @RequestParam("p_itemcode") String itemCode,
+      @RequestParam("p_kindcode") String kindCode,
+      @RequestParam("p_graderank") String gradeRank,
+      @RequestParam("p_countycode") String countyCode
   );
 
   @GetMapping(value = "/service/price/xml.do", produces = "application/json")
