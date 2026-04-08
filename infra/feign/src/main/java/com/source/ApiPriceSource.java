@@ -3,6 +3,7 @@ package com.source;
 import com.client.MarketPriceClient;
 import com.dto.MarketPriceDailyResponse;
 import com.properties.MarketPriceApiProperties;
+import constant.Constants;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +53,8 @@ public class ApiPriceSource implements PriceReader {
             item.productClsName(),
             item.categoryCode(),
             item.categoryName(),
-            "",
-            "",
+            Constants.NOT_APPLICABLE,
+            Constants.NOT_APPLICABLE,
             parsePrice(item.dpr1()),
             item.unit(),
             regDay
