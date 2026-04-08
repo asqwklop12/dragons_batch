@@ -4,7 +4,6 @@ import com.client.MarketPriceClient;
 import com.dto.MarketPriceDailyResponse;
 import com.properties.MarketPriceApiProperties;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import model.price.PriceReadItem;
@@ -63,9 +62,13 @@ public class ApiPriceSource implements PriceReader {
   }
 
   private int parsePrice(String price) {
-    if (price == null || price.isBlank()) {
+    if (price == null) {
       return 0;
     }
-    return Integer.parseInt(price.replace(",", "").trim());
+    String normalized = price.replace(",", "").trim();
+    if (normalized.isEmpty() || !normalized.matches("\\d+")) {
+      return 0;
+    }
+    return Integer.parseInt(normalized);
   }
 }

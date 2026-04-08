@@ -1,11 +1,17 @@
 package com.properties;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @ConfigurationProperties(prefix = "kamis.api")
 public class MarketPriceApiProperties {
 
+  @NotBlank
   private String certKey;
+
+  @NotBlank
   private String certId;
 
   public String getCertKey() {
