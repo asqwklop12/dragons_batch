@@ -6,7 +6,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MarketPriceDailyResponse(
-    String error_code,
+    @JsonProperty("error_code") String errorCode,
     List<List<String>> condition,
     List<MarketPriceDailyItem> price
 ) {
