@@ -12,6 +12,7 @@ public final class Constants {
   public static final String HEADER_REQUEST_ID = "X_Request_Id";
 
 
+  public static final String NOT_APPLICABLE = "";
 
   private Constants() {
   }

@@ -1,22 +1,22 @@
-package dto;
+package com.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record KamisMonthlyPriceResponse(
-    KamisMonthlyPriceData data
+public record MarketPriceMonthlyResponse(
+    MarketPriceMonthlyData data
 ) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public record KamisMonthlyPriceData(
-      List<KamisMonthlyPriceItem> item
+  public record MarketPriceMonthlyData(
+      List<MarketPriceMonthlyItem> item
   ) {
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public record KamisMonthlyPriceItem(
+  public record MarketPriceMonthlyItem(
       @JsonProperty("itemcode") String itemCode,
       @JsonProperty("item_name") String itemName,
       @JsonProperty("kindcode") String kindCode,
