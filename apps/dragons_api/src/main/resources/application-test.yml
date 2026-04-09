@@ -3,6 +3,11 @@ spring:
     activate:
       on-profile: test
 
+kamis:
+  api:
+    cert-key: test-key
+    cert-id: test-id
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
