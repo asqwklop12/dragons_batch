@@ -15,6 +15,14 @@ public class PriceDataRepositoryImpl implements PriceDataRepository {
   private final JpaPriceDataRepository repository;
 
   @Override
+  public void saveAll(List<? extends PriceData> priceData) {
+    if (priceData == null || priceData.isEmpty()) {
+      return;
+    }
+    repository.saveAll(priceData);
+  }
+
+  @Override
   public List<PriceData> pricesOn(LocalDate regDay) {
     return repository.findAllByRegDayOrderByCreatedAtDescIdDesc(regDay);
   }

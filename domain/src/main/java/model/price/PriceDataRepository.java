@@ -5,6 +5,8 @@ import java.util.List;
 
 public interface PriceDataRepository {
 
+  void saveAll(List<? extends PriceData> priceData);
+
   List<PriceData> pricesOn(LocalDate regDay);
 
   List<PriceData> pricesMatchingItemName(String itemName);
