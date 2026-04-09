@@ -1,11 +1,15 @@
 package com.config;
 
 import com.application.PriceReadService;
+import com.process.PriceItemProcessor;
+import java.time.Clock;
 import java.time.LocalDate;
+import model.price.PriceData;
 import model.price.PriceReadItem;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,5 +30,10 @@ public class BatchCoreConfiguration {
             regDay == null || regDay.isBlank() ? LocalDate.now() : LocalDate.parse(regDay)
         )
     );
+  }
+
+  @Bean
+  ItemProcessor<PriceReadItem, PriceData> priceItemProcessor() {
+    return new PriceItemProcessor(Clock.systemDefaultZone());
   }
 }
