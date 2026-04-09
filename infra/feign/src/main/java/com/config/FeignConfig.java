@@ -2,11 +2,11 @@ package com.config;
 
 import com.dto.MarketPriceDailyResponse;
 import com.dto.MarketPriceMonthlyResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.interceptor.MdcInterceptor;
 import com.interceptor.RequestResponseLoggingLogger;
 import com.properties.FeignProperties;
 import com.properties.FeignProperties.FeignProperty;
-import config.JacksonConfig;
 import constant.Constants;
 import feign.Feign;
 import feign.Request;
@@ -14,8 +14,10 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -43,15 +45,19 @@ public class FeignConfig {
   }
 
   @Bean
+  @ConditionalOnMissingBean(ObjectMapper.class)
+  public ObjectMapper feignObjectMapper() {
+    return new config.JacksonConfig().objectMapper();
+  }
+
+  @Bean
   public Feign.Builder feignBuilder(
       FeignProperties properties) {
     return createFeignBuilder(Constants.DEFAULT, properties);
   }
 
   @Bean
-  public Decoder feignDecoder() {
-    var objectMapper = new JacksonConfig().objectMapper();
-
+  public Decoder feignDecoder(ObjectMapper objectMapper) {
     return (response, type) -> {
       byte[] responseBody = readResponseBody(response);
       if (responseBody.length == 0) {
@@ -95,7 +101,10 @@ public class FeignConfig {
     if (response.body() == null) {
       return new byte[0];
     }
-    return response.body().asInputStream().readAllBytes();
+
+    try (InputStream inputStream = response.body().asInputStream()) {
+      return inputStream.readAllBytes();
+    }
   }
 
   private String truncate(String value, int maxLength) {

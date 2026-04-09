@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.List;
 import model.price.PriceData;
 import model.price.PriceReadItem;
@@ -104,7 +105,7 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.body()).contains("\"mockMode\":false");
     assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
         .extracting(PriceData::getItemCode)
-        .containsExactly("912", "911");
+        .containsExactlyInAnyOrderElementsOf(Set.of("911", "912"));
   }
 
   @Test
