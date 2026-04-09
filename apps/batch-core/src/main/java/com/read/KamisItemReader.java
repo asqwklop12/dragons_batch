@@ -9,7 +9,7 @@ import model.price.PriceReadItem;
 import org.springframework.batch.infrastructure.item.ItemReader;
 
 @RequiredArgsConstructor
-public class PriceItemReader implements ItemReader<PriceReadItem> {
+public class KamisItemReader implements ItemReader<PriceReadItem> {
 
   private final PriceReadService priceReadService;
   private final String itemCategoryCode;

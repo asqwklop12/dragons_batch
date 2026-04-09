@@ -10,7 +10,7 @@ import java.util.List;
 import model.price.PriceReadItem;
 import org.junit.jupiter.api.Test;
 
-class PriceItemReaderTest {
+class KamisItemReaderTest {
 
   @Test
   void readReturnsItemsInOrderAndThenNull() throws Exception {
@@ -25,7 +25,7 @@ class PriceItemReaderTest {
             )
         );
 
-    PriceItemReader reader = new PriceItemReader(priceReadService, "200", regDay);
+    KamisItemReader reader = new KamisItemReader(priceReadService, "200", regDay);
 
     assertThat(reader.read().itemName()).isEqualTo("배추");
     assertThat(reader.read().itemName()).isEqualTo("무");

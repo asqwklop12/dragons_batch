@@ -12,12 +12,12 @@ import model.price.PriceDataRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.infrastructure.item.Chunk;
 
-class PriceItemWriterTest {
+class KamisItemWriterTest {
 
   @Test
   void writeDelegatesChunkItemsToRepository() throws Exception {
     PriceDataRepository repository = mock(PriceDataRepository.class);
-    PriceItemWriter writer = new PriceItemWriter(repository);
+    KamisItemWriter writer = new KamisItemWriter(repository);
     PriceData cabbage = priceData("111", "배추", 12000);
     PriceData radish = priceData("112", "무", 9800);
 
@@ -29,7 +29,7 @@ class PriceItemWriterTest {
   @Test
   void writeSkipsRepositoryCallWhenChunkIsEmpty() throws Exception {
     PriceDataRepository repository = mock(PriceDataRepository.class);
-    PriceItemWriter writer = new PriceItemWriter(repository);
+    KamisItemWriter writer = new KamisItemWriter(repository);
 
     writer.write(new Chunk<>());
 

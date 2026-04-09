@@ -11,12 +11,12 @@ import model.price.PriceData;
 import model.price.PriceReadItem;
 import org.junit.jupiter.api.Test;
 
-class PriceItemProcessorTest {
+class KamisItemProcessorTest {
 
   @Test
   void processMapsReadItemToPriceData() throws Exception {
     Clock fixedClock = Clock.fixed(Instant.parse("2024-01-15T01:30:00Z"), ZoneId.of("Asia/Seoul"));
-    PriceItemProcessor processor = new PriceItemProcessor(fixedClock);
+    KamisItemProcessor processor = new KamisItemProcessor(fixedClock);
     PriceReadItem item = new PriceReadItem(
         "111",
         "배추",
@@ -50,7 +50,7 @@ class PriceItemProcessorTest {
 
   @Test
   void processReturnsNullWhenItemIsNull() throws Exception {
-    PriceItemProcessor processor = new PriceItemProcessor(Clock.systemDefaultZone());
+    KamisItemProcessor processor = new KamisItemProcessor(Clock.systemDefaultZone());
 
     assertThat(processor.process(null)).isNull();
   }

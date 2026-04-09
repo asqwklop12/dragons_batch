@@ -8,7 +8,7 @@ import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 
 @RequiredArgsConstructor
-public class PriceItemWriter implements ItemWriter<PriceData> {
+public class KamisItemWriter implements ItemWriter<PriceData> {
 
   private final PriceDataRepository priceDataRepository;
 

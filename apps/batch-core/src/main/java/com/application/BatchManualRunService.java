@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 public class BatchManualRunService {
 
   private final PriceReadService priceReadService;
-  private final ItemProcessor<PriceReadItem, PriceData> priceItemProcessor;
-  private final ItemWriter<PriceData> priceItemWriter;
+  private final ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor;
+  private final ItemWriter<PriceData> kamisItemWriter;
 
   public int run(String itemCategoryCode, LocalDate regDay) {
     List<PriceData> processedItems = priceReadService.readItems(itemCategoryCode, regDay).stream()
@@ -31,7 +31,7 @@ public class BatchManualRunService {
 
   private PriceData processItem(PriceReadItem item) {
     try {
-      return priceItemProcessor.process(item);
+      return kamisItemProcessor.process(item);
     } catch (Exception exception) {
       throw new IllegalStateException("배치 데이터 변환에 실패했습니다.", exception);
     }
@@ -39,7 +39,7 @@ public class BatchManualRunService {
 
   private void writeItems(List<PriceData> processedItems) {
     try {
-      priceItemWriter.write(new Chunk<>(processedItems));
+      kamisItemWriter.write(new Chunk<>(processedItems));
     } catch (Exception exception) {
       throw new IllegalStateException("배치 데이터 저장에 실패했습니다.", exception);
     }

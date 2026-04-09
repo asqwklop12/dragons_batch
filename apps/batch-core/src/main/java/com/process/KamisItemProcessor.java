@@ -8,7 +8,7 @@ import model.price.PriceReadItem;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 
 @RequiredArgsConstructor
-public class PriceItemProcessor implements ItemProcessor<PriceReadItem, PriceData> {
+public class KamisItemProcessor implements ItemProcessor<PriceReadItem, PriceData> {
 
   private final Clock clock;
 
