@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import model.price.PriceData;
 import model.price.PriceReadItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,10 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class ApiControllerTest extends MySqlContainerTestSupport {
+
+  private static final Pattern JOB_EXECUTION_ID_PATTERN = Pattern.compile("\"jobExecutionId\":(\\d+)");
 
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -35,11 +40,15 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   @Autowired
   private JpaPriceDataRepository jpaPriceDataRepository;
 
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
   @MockitoBean
   private PriceReadService priceReadService;
 
   @BeforeEach
   void setUp() {
+    clearBatchMetadata();
     jpaPriceDataRepository.deleteAllInBatch();
     jpaPriceDataRepository.saveAllAndFlush(
         List.of(
@@ -104,9 +113,34 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.body()).contains("\"jobExecutionId\":");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
     assertThat(response.body()).contains("\"mockMode\":false");
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
+        .isEqualTo(1);
     assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
         .extracting(PriceData::getItemCode)
         .containsExactlyInAnyOrderElementsOf(Set.of("911", "912"));
+  }
+
+  @Test
+  void runBatchPersistsExecutionMetadataInDatabase() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "테스트 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay)
+            )
+        );
+
+    HttpResponse<String> firstResponse = sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    HttpResponse<String> secondResponse = sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+
+    long firstExecutionId = extractJobExecutionId(firstResponse.body());
+    long secondExecutionId = extractJobExecutionId(secondResponse.body());
+
+    assertThat(secondExecutionId).isGreaterThan(firstExecutionId);
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
+        .isEqualTo(2);
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_STEP_EXECUTION", Integer.class))
+        .isEqualTo(2);
   }
 
   @Test
@@ -143,6 +177,32 @@ class ApiControllerTest extends MySqlContainerTestSupport {
         .GET()
         .build();
     return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+  }
+
+  private HttpResponse<String> sendPost(String path) throws Exception {
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + path))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+    return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+  }
+
+  private long extractJobExecutionId(String responseBody) {
+    Matcher matcher = JOB_EXECUTION_ID_PATTERN.matcher(responseBody);
+    assertThat(matcher.find()).isTrue();
+    return Long.parseLong(matcher.group(1));
+  }
+
+  private void clearBatchMetadata() {
+    jdbcTemplate.update("delete from BATCH_STEP_EXECUTION_CONTEXT");
+    jdbcTemplate.update("delete from BATCH_JOB_EXECUTION_CONTEXT");
+    jdbcTemplate.update("delete from BATCH_STEP_EXECUTION");
+    jdbcTemplate.update("delete from BATCH_JOB_EXECUTION_PARAMS");
+    jdbcTemplate.update("delete from BATCH_JOB_EXECUTION");
+    jdbcTemplate.update("delete from BATCH_JOB_INSTANCE");
+    jdbcTemplate.update("update BATCH_STEP_EXECUTION_SEQ set ID = 0 where UNIQUE_KEY = '0'");
+    jdbcTemplate.update("update BATCH_JOB_EXECUTION_SEQ set ID = 0 where UNIQUE_KEY = '0'");
+    jdbcTemplate.update("update BATCH_JOB_INSTANCE_SEQ set ID = 0 where UNIQUE_KEY = '0'");
   }
 
   private String baseUrl() {
