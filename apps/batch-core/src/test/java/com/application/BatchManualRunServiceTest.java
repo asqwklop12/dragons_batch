@@ -19,6 +19,7 @@ import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.step.StepExecution;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class BatchManualRunServiceTest {
 
@@ -26,9 +27,10 @@ class BatchManualRunServiceTest {
   void runLaunchesJobWithRequestParametersAndReturnsExecutionSummary() throws Exception {
     JobOperator jobOperator = mock(JobOperator.class);
     Job kamisPriceJob = mock(Job.class);
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
     JobExecution jobExecution = mock(JobExecution.class);
     StepExecution stepExecution = mock(StepExecution.class);
-    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob);
+    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate);
     LocalDate regDay = LocalDate.of(2024, 1, 15);
 
     given(jobOperator.start(eq(kamisPriceJob), org.mockito.ArgumentMatchers.any(JobParameters.class)))
@@ -61,8 +63,9 @@ class BatchManualRunServiceTest {
   void runThrowsWhenBatchExecutionFails() throws Exception {
     JobOperator jobOperator = mock(JobOperator.class);
     Job kamisPriceJob = mock(Job.class);
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
     JobExecution jobExecution = mock(JobExecution.class);
-    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob);
+    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate);
     RuntimeException failure = new RuntimeException("writer failed");
 
     given(jobOperator.start(eq(kamisPriceJob), org.mockito.ArgumentMatchers.any(JobParameters.class)))

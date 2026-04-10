@@ -2,7 +2,6 @@ package com.dragons.interfaces.api.batch;
 
 import com.application.BatchManualRunService;
 import com.application.BatchRunResult;
-import com.application.BatchStatusQueryService;
 import com.application.BatchStatusResult;
 import com.dragons.interfaces.api.batch.dto.BatchConfigResponse;
 import com.dragons.interfaces.api.batch.dto.BatchRunRequest;
@@ -12,10 +11,10 @@ import com.dragons.interfaces.api.batch.dto.BatchStatusRequest;
 import com.dragons.interfaces.api.batch.dto.BatchStatusResponse;
 import com.dragons.support.ApiResponse;
 import com.properties.MarketPriceApiProperties;
+import constant.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BatchApiController {
 
-  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
   private final BatchManualRunService batchManualRunService;
-  private final BatchStatusQueryService batchStatusQueryService;
   private final MarketPriceApiProperties marketPriceApiProperties;
 
 
@@ -59,7 +55,7 @@ public class BatchApiController {
   @GetMapping("/status")
   @Operation(summary = "배치 실행 이력 조회")
   public ApiResponse<BatchStatusResponse> getBatchStatus(@ModelAttribute BatchStatusRequest request) {
-    BatchStatusResult result = batchStatusQueryService.latestStatuses(request.resolvedLimit());
+    BatchStatusResult result = batchManualRunService.latestStatuses(request.resolvedLimit());
     return ApiResponse.successResponse(
         new BatchStatusResponse(
             result.count(),
@@ -111,7 +107,7 @@ public class BatchApiController {
   }
 
   private String formatDateTime(java.time.LocalDateTime value) {
-    return value == null ? null : DATE_TIME_FORMATTER.format(value);
+    return value == null ? null : Constants.DATE_TIME_FORMATTER.format(value);
   }
 
   private boolean hasConcreteValue(String value) {
