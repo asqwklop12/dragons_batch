@@ -2,6 +2,7 @@ package com.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -12,6 +13,7 @@ public record MarketPriceDailyResponse(
 ) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonDeserialize(using = MarketPriceDailyItemDeserializer.class)
   public record MarketPriceDailyItem(
       @JsonProperty("productno") String productNo,
       @JsonProperty("item_name") String itemName,

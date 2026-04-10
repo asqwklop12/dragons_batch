@@ -1,7 +1,9 @@
 package com.dragons.interfaces.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
+import com.application.PriceReadService;
 import com.support.MySqlContainerTestSupport;
 import com.repository.JpaPriceDataRepository;
 import java.net.URI;
@@ -10,14 +12,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.List;
 import model.price.PriceData;
+import model.price.PriceReadItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class ApiControllerTest extends MySqlContainerTestSupport {
@@ -30,6 +35,9 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   @Autowired
   private JpaPriceDataRepository jpaPriceDataRepository;
 
+  @MockitoBean
+  private PriceReadService priceReadService;
+
   @BeforeEach
   void setUp() {
     jpaPriceDataRepository.deleteAllInBatch();
@@ -41,6 +49,8 @@ class ApiControllerTest extends MySqlContainerTestSupport {
             priceData("311", "양파", "01", "일반", "300", "부산", "02", "중품", 14300, "15kg", "2024-01-17", "2024-01-17T08:45:00")
         )
     );
+    given(priceReadService.readItems(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(LocalDate.class)))
+        .willReturn(List.of());
   }
 
   @Test
@@ -72,6 +82,15 @@ class ApiControllerTest extends MySqlContainerTestSupport {
 
   @Test
   void runBatchReturnsBatchExecutionResult() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "테스트 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay),
+                new PriceReadItem("912", "테스트 무", "01", "일반", "100", "서울", "01", "상품", 23456, "20kg", regDay)
+            )
+        );
+
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(baseUrl() + "/api/batch/run?itemCategoryCode=200&regDay=2024-01-15"))
         .POST(HttpRequest.BodyPublishers.noBody())
@@ -83,7 +102,20 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.body()).contains("\"success\":true");
     assertThat(response.body()).contains("\"message\":\"배치 실행 완료\"");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
-    assertThat(response.body()).contains("\"mockMode\":true");
+    assertThat(response.body()).contains("\"mockMode\":false");
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
+        .extracting(PriceData::getItemCode)
+        .containsExactlyInAnyOrderElementsOf(Set.of("911", "912"));
+  }
+
+  @Test
+  void getBatchStatusReturnsEmptyWhenHistoryTrackingIsDisabled() throws Exception {
+    HttpResponse<String> response = sendGet("/api/batch/status");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"count\":0");
+    assertThat(response.body()).contains("\"mockMode\":false");
+    assertThat(response.body()).contains("\"data\":[]");
   }
 
   @Test

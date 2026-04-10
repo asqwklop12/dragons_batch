@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
     configuration = FeignConfig.class)
 public interface MarketPriceClient {
 
-  @GetMapping(value = "/service/price/xml.do", produces = "application/json")
+  @GetMapping("/service/price/xml.do")
   MarketPriceDailyResponse fetchDailyPricesInternal(
       @RequestParam("action") String requestAction,
       @RequestParam("p_cert_key") String certificationKey,
@@ -29,7 +29,7 @@ public interface MarketPriceClient {
       @RequestParam("p_countycode") String countyCode
   );
 
-  @GetMapping(value = "/service/price/xml.do", produces = "application/json")
+  @GetMapping("/service/price/xml.do")
   MarketPriceMonthlyResponse fetchMonthlyPricesInternal(
       @RequestParam("action") String requestAction,
       @RequestParam("p_returntype") String responseFormat,
