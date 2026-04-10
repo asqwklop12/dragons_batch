@@ -37,8 +37,7 @@ public class BatchApiController {
     String targetRegDay = resolveRegDay(request);
     BatchRunResult result = batchManualRunService.run(itemCategoryCode, LocalDate.parse(targetRegDay));
 
-    return new ApiResponse<>(
-        true,
+    return ApiResponse.successResponse(
         new BatchRunResponse(
             result.jobExecutionId(),
             result.status(),
@@ -47,9 +46,7 @@ public class BatchApiController {
             itemCategoryCode,
             targetRegDay,
             false
-        ),
-        "배치 실행 완료"
-    );
+    ));
   }
 
   @GetMapping("/status")

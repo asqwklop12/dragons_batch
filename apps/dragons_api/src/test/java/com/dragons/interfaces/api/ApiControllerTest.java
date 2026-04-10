@@ -100,7 +100,7 @@ class ApiControllerTest extends MySqlContainerTestSupport {
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("\"success\":true");
-    assertThat(response.body()).contains("\"message\":\"배치 실행 완료\"");
+    assertThat(response.body()).contains("\"message\":null");
     assertThat(response.body()).contains("\"jobExecutionId\":");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
     assertThat(response.body()).contains("\"mockMode\":false");
