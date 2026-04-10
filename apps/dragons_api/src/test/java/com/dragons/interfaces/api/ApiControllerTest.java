@@ -221,6 +221,19 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.statusCode()).isIn(200, 302);
   }
 
+  @Test
+  void getBatchConfigReturnsActualResolvedConfiguration() throws Exception {
+    HttpResponse<String> response = sendGet("/api/batch/config");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"success\":true");
+    assertThat(response.body()).contains("\"apiConfigured\":true");
+    assertThat(response.body()).contains("\"mockMode\":false");
+    assertThat(response.body()).contains("\"baseUrl\":\"https://www.kamis.or.kr\"");
+    assertThat(response.body()).contains("\"certKeySet\":true");
+    assertThat(response.body()).contains("\"certIdSet\":true");
+  }
+
   private HttpResponse<String> sendGet(String path) throws Exception {
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(baseUrl() + path))

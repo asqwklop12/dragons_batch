@@ -11,6 +11,7 @@ import com.dragons.interfaces.api.batch.dto.BatchStatusItemResponse;
 import com.dragons.interfaces.api.batch.dto.BatchStatusRequest;
 import com.dragons.interfaces.api.batch.dto.BatchStatusResponse;
 import com.dragons.support.ApiResponse;
+import com.properties.MarketPriceApiProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ public class BatchApiController {
 
   private final BatchManualRunService batchManualRunService;
   private final BatchStatusQueryService batchStatusQueryService;
+  private final MarketPriceApiProperties marketPriceApiProperties;
 
 
   @PostMapping("/run")
@@ -81,13 +83,17 @@ public class BatchApiController {
   @GetMapping("/config")
   @Operation(summary = "API 설정 확인")
   public ApiResponse<BatchConfigResponse> getBatchConfig() {
+    boolean certKeySet = hasConcreteValue(marketPriceApiProperties.getCertKey());
+    boolean certIdSet = hasConcreteValue(marketPriceApiProperties.getCertId());
+    boolean mockMode = marketPriceApiProperties.isMockMode();
+
     return ApiResponse.successResponse(
         new BatchConfigResponse(
-            false,
-            true,
-            "https://www.kamis.or.kr/service/price/xml.do",
-            false,
-            false
+            certKeySet && certIdSet && !mockMode,
+            mockMode,
+            marketPriceApiProperties.getBaseUrl(),
+            certKeySet,
+            certIdSet
         )
     );
   }
@@ -106,5 +112,9 @@ public class BatchApiController {
 
   private String formatDateTime(java.time.LocalDateTime value) {
     return value == null ? null : DATE_TIME_FORMATTER.format(value);
+  }
+
+  private boolean hasConcreteValue(String value) {
+    return value != null && !value.isBlank() && !value.startsWith("${");
   }
 }
