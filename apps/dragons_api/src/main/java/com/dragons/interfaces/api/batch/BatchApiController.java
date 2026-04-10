@@ -2,9 +2,13 @@ package com.dragons.interfaces.api.batch;
 
 import com.application.BatchManualRunService;
 import com.application.BatchRunResult;
+import com.application.BatchStatusQueryService;
+import com.application.BatchStatusResult;
 import com.dragons.interfaces.api.batch.dto.BatchConfigResponse;
 import com.dragons.interfaces.api.batch.dto.BatchRunRequest;
 import com.dragons.interfaces.api.batch.dto.BatchRunResponse;
+import com.dragons.interfaces.api.batch.dto.BatchStatusItemResponse;
+import com.dragons.interfaces.api.batch.dto.BatchStatusRequest;
 import com.dragons.interfaces.api.batch.dto.BatchStatusResponse;
 import com.dragons.support.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +32,7 @@ public class BatchApiController {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
   private final BatchManualRunService batchManualRunService;
+  private final BatchStatusQueryService batchStatusQueryService;
 
 
   @PostMapping("/run")
@@ -51,13 +56,24 @@ public class BatchApiController {
 
   @GetMapping("/status")
   @Operation(summary = "배치 실행 이력 조회")
-  public ApiResponse<BatchStatusResponse> getBatchStatus() {
+  public ApiResponse<BatchStatusResponse> getBatchStatus(@ModelAttribute BatchStatusRequest request) {
+    BatchStatusResult result = batchStatusQueryService.latestStatuses(request.resolvedLimit());
     return ApiResponse.successResponse(
         new BatchStatusResponse(
-            0,
+            result.count(),
             false,
             false,
-            List.of()
+            result.items().stream()
+                .map(item -> new BatchStatusItemResponse(
+                    item.jobInstanceId(),
+                    item.jobName(),
+                    item.status(),
+                    formatDateTime(item.startTime()),
+                    formatDateTime(item.endTime()),
+                    item.exitCode(),
+                    item.params()
+                ))
+                .toList()
         )
     );
   }

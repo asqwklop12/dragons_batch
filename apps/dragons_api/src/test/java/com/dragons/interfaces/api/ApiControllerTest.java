@@ -154,6 +154,56 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   }
 
   @Test
+  void getBatchStatusReturnsRecentExecutionHistory() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "테스트 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay)
+            )
+        );
+
+    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+
+    HttpResponse<String> response = sendGet("/api/batch/status");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"count\":2");
+    assertThat(response.body()).contains("\"jobName\":\"kamisPriceJob\"");
+    assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
+    assertThat(response.body()).contains("\"exitCode\":\"COMPLETED\"");
+    assertThat(response.body()).contains("\"itemCategoryCode\":\"200\"");
+    assertThat(response.body()).contains("\"regDay\":\"2024-01-15\"");
+    assertThat(response.body()).doesNotContain("requestedAt");
+  }
+
+  @Test
+  void getBatchStatusAppliesRequestedLimitUpToTwenty() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "테스트 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay)
+            )
+        );
+
+    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+
+    HttpResponse<String> limitedResponse = sendGet("/api/batch/status?limit=2");
+    HttpResponse<String> cappedResponse = sendGet("/api/batch/status?limit=999");
+
+    assertThat(limitedResponse.statusCode()).isEqualTo(200);
+    assertThat(limitedResponse.body()).contains("\"count\":2");
+    assertThat(occurrencesOf(limitedResponse.body(), "\"jobName\":\"kamisPriceJob\"")).isEqualTo(2);
+
+    assertThat(cappedResponse.statusCode()).isEqualTo(200);
+    assertThat(cappedResponse.body()).contains("\"count\":3");
+  }
+
+  @Test
   void openApiDocsEndpointIsExposed() throws Exception {
     HttpResponse<String> response = sendGet("/v3/api-docs");
 
@@ -191,6 +241,10 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     Matcher matcher = JOB_EXECUTION_ID_PATTERN.matcher(responseBody);
     assertThat(matcher.find()).isTrue();
     return Long.parseLong(matcher.group(1));
+  }
+
+  private int occurrencesOf(String source, String target) {
+    return source.split(Pattern.quote(target), -1).length - 1;
   }
 
   private void clearBatchMetadata() {
