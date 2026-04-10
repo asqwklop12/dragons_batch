@@ -1,6 +1,11 @@
 spring:
   application:
     name: dragons_api
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
   profiles:
     default: local
   config:

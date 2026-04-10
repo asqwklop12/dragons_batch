@@ -1,19 +1,17 @@
 package com.dragons.interfaces.api.batch;
 
 import com.application.BatchManualRunService;
+import com.application.BatchRunResult;
 import com.dragons.interfaces.api.batch.dto.BatchConfigResponse;
 import com.dragons.interfaces.api.batch.dto.BatchRunRequest;
 import com.dragons.interfaces.api.batch.dto.BatchRunResponse;
-import com.dragons.interfaces.api.batch.dto.BatchStatusItemResponse;
 import com.dragons.interfaces.api.batch.dto.BatchStatusResponse;
 import com.dragons.support.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,19 +35,15 @@ public class BatchApiController {
   public ApiResponse<BatchRunResponse> runBatch(@ModelAttribute BatchRunRequest request) {
     String itemCategoryCode = resolveItemCategoryCode(request);
     String targetRegDay = resolveRegDay(request);
-    LocalDateTime startTime = LocalDateTime.now();
-
-    batchManualRunService.run(itemCategoryCode, LocalDate.parse(targetRegDay));
-
-    LocalDateTime endTime = LocalDateTime.now();
+    BatchRunResult result = batchManualRunService.run(itemCategoryCode, LocalDate.parse(targetRegDay));
 
     return new ApiResponse<>(
         true,
         new BatchRunResponse(
-            1L,
-            "COMPLETED",
-            DATE_TIME_FORMATTER.format(startTime),
-            DATE_TIME_FORMATTER.format(endTime),
+            result.jobExecutionId(),
+            result.status(),
+            formatDateTime(result.startTime()),
+            formatDateTime(result.endTime()),
             itemCategoryCode,
             targetRegDay,
             false
@@ -95,5 +89,9 @@ public class BatchApiController {
     return request.regDay() == null || request.regDay().isBlank()
         ? LocalDate.now().toString()
         : request.regDay();
+  }
+
+  private String formatDateTime(java.time.LocalDateTime value) {
+    return value == null ? null : DATE_TIME_FORMATTER.format(value);
   }
 }

@@ -1,47 +1,53 @@
 package com.application;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import model.price.PriceData;
-import model.price.PriceReadItem;
-import org.springframework.batch.infrastructure.item.Chunk;
-import org.springframework.batch.infrastructure.item.ItemProcessor;
-import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class BatchManualRunService {
 
-  private final PriceReadService priceReadService;
-  private final ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor;
-  private final ItemWriter<PriceData> kamisItemWriter;
+  private final JobOperator jobOperator;
+  private final Job kamisPriceJob;
 
-  public int run(String itemCategoryCode, LocalDate regDay) {
-    List<PriceData> processedItems = priceReadService.readItems(itemCategoryCode, regDay).stream()
-        .map(this::processItem)
-        .filter(Objects::nonNull)
-        .toList();
-
-    writeItems(processedItems);
-    return processedItems.size();
-  }
-
-  private PriceData processItem(PriceReadItem item) {
+  public BatchRunResult run(String itemCategoryCode, LocalDate regDay) {
     try {
-      return kamisItemProcessor.process(item);
-    } catch (Exception exception) {
-      throw new IllegalStateException("배치 데이터 변환에 실패했습니다.", exception);
-    }
-  }
+      JobExecution jobExecution = jobOperator.start(
+          kamisPriceJob,
+          new JobParametersBuilder()
+              .addString("itemCategoryCode", itemCategoryCode)
+              .addString("regDay", regDay.toString())
+              .addLong("requestedAt", System.currentTimeMillis())
+              .toJobParameters()
+      );
 
-  private void writeItems(List<PriceData> processedItems) {
-    try {
-      kamisItemWriter.write(new Chunk<>(processedItems));
+      if (jobExecution.getStatus() != BatchStatus.COMPLETED) {
+        throw new IllegalStateException(
+            "배치 실행에 실패했습니다.",
+            jobExecution.getAllFailureExceptions().stream().findFirst().orElse(null)
+        );
+      }
+
+      return new BatchRunResult(
+          jobExecution.getId(),
+          jobExecution.getStatus().name(),
+          jobExecution.getStartTime(),
+          jobExecution.getEndTime(),
+          jobExecution.getStepExecutions().stream()
+              .mapToLong(StepExecution::getWriteCount)
+              .sum()
+      );
+    } catch (IllegalStateException exception) {
+      throw exception;
     } catch (Exception exception) {
-      throw new IllegalStateException("배치 데이터 저장에 실패했습니다.", exception);
+      throw new IllegalStateException("배치 실행에 실패했습니다.", exception);
     }
   }
 }
