@@ -29,6 +29,11 @@ public class BatchCoreConfiguration {
   private static final int CHUNK_SIZE = 100;
 
   @Bean
+  Clock batchClock() {
+    return Clock.systemDefaultZone();
+  }
+
+  @Bean
   @StepScope
   ItemReader<PriceReadItem> kamisItemReader(
       PriceReadService priceReadService,
@@ -43,8 +48,8 @@ public class BatchCoreConfiguration {
   }
 
   @Bean
-  ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor() {
-    return new KamisItemProcessor(Clock.systemDefaultZone());
+  ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor(Clock batchClock) {
+    return new KamisItemProcessor(batchClock);
   }
 
   @Bean
