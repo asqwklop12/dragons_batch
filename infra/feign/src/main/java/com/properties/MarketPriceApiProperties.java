@@ -9,10 +9,23 @@ import org.springframework.validation.annotation.Validated;
 public class MarketPriceApiProperties {
 
   @NotBlank
+  private String baseUrl;
+
+  @NotBlank
   private String certKey;
 
   @NotBlank
   private String certId;
+
+  private boolean mockMode;
+
+  public String getBaseUrl() {
+    return baseUrl;
+  }
+
+  public void setBaseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
+  }
 
   public String getCertKey() {
     return certKey;
@@ -28,5 +41,13 @@ public class MarketPriceApiProperties {
 
   public void setCertId(String certId) {
     this.certId = certId;
+  }
+
+  public boolean isMockMode() {
+    return mockMode;
+  }
+
+  public void setMockMode(boolean mockMode) {
+    this.mockMode = mockMode;
   }
 }

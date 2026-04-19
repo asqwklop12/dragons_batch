@@ -1,5 +1,7 @@
 package constant;
 
+import java.time.format.DateTimeFormatter;
+
 public final class Constants {
 
   public static final String PROFILE_PROD = "prod";
@@ -13,6 +15,7 @@ public final class Constants {
 
 
   public static final String NOT_APPLICABLE = "";
+  public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
   private Constants() {
   }

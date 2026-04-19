@@ -1,0 +1,14 @@
+spring:
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+      table-prefix: BATCH_
+
+batch:
+  schedule:
+    daily:
+      cron: "0 1 0 * * *"
+      zone: "Asia/Seoul"
+      item-category-code: "200"

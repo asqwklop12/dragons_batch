@@ -8,3 +8,4 @@ spring:
       - feign.yml
       - jpa.yml
       - logging.yml
+      - batch.yml
