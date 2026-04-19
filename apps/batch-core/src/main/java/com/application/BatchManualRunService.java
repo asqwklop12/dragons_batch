@@ -1,5 +1,6 @@
 package com.application;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -22,6 +23,7 @@ public class BatchManualRunService {
   private final JobOperator jobOperator;
   private final Job kamisPriceJob;
   private final JdbcTemplate jdbcTemplate;
+  private final Clock clock;
 
   public BatchRunResult run(String itemCategoryCode, LocalDate regDay) {
     try {
@@ -30,7 +32,7 @@ public class BatchManualRunService {
           new JobParametersBuilder()
               .addString("itemCategoryCode", itemCategoryCode)
               .addString("regDay", regDay.toString())
-              .addLong("requestedAt", System.currentTimeMillis())
+              .addLong("requestedAt", clock.millis())
               .toJobParameters()
       );
 
@@ -58,7 +60,7 @@ public class BatchManualRunService {
   }
 
   public BatchStatusResult latestStatuses(int limit) {
-    List<BatchStatusItemResult> items = jdbcTemplate.query(
+    List<BatchExecutionSummary> executions = jdbcTemplate.query(
         """
             select
               ji.JOB_INSTANCE_ID,
@@ -73,46 +75,89 @@ public class BatchManualRunService {
             order by je.JOB_EXECUTION_ID desc
             limit ?
             """,
-        (resultSet, rowNum) -> new BatchStatusItemResult(
+        (resultSet, rowNum) -> new BatchExecutionSummary(
             resultSet.getLong("JOB_INSTANCE_ID"),
             resultSet.getString("JOB_NAME"),
+            resultSet.getLong("JOB_EXECUTION_ID"),
             resultSet.getString("STATUS"),
             toLocalDateTime(resultSet.getTimestamp("START_TIME")),
             toLocalDateTime(resultSet.getTimestamp("END_TIME")),
-            resultSet.getString("EXIT_CODE"),
-            loadParams(resultSet.getLong("JOB_EXECUTION_ID"))
+            resultSet.getString("EXIT_CODE")
         ),
         limit
     );
+
+    if (executions.isEmpty()) {
+      return new BatchStatusResult(0, List.of());
+    }
+
+    Map<Long, Map<String, String>> paramsByExecutionId = loadParamsBatch(
+        executions.stream()
+            .map(BatchExecutionSummary::jobExecutionId)
+            .toList()
+    );
+
+    List<BatchStatusItemResult> items = executions.stream()
+        .map(execution -> new BatchStatusItemResult(
+            execution.jobInstanceId(),
+            execution.jobName(),
+            execution.jobExecutionId(),
+            execution.status(),
+            execution.startTime(),
+            execution.endTime(),
+            execution.exitCode(),
+            paramsByExecutionId.getOrDefault(execution.jobExecutionId(), Map.of())
+        ))
+        .toList();
+
     return new BatchStatusResult(items.size(), items);
   }
 
-  private Map<String, String> loadParams(long jobExecutionId) {
-    List<Map.Entry<String, String>> entries = jdbcTemplate.query(
+  private Map<Long, Map<String, String>> loadParamsBatch(List<Long> jobExecutionIds) {
+    String placeholders = String.join(", ", jobExecutionIds.stream().map(ignored -> "?").toList());
+    List<BatchExecutionParam> params = jdbcTemplate.query(
         """
-            select PARAMETER_NAME, PARAMETER_VALUE
+            select JOB_EXECUTION_ID, PARAMETER_NAME, PARAMETER_VALUE
             from BATCH_JOB_EXECUTION_PARAMS
-            where JOB_EXECUTION_ID = ?
-            order by PARAMETER_NAME asc
-            """,
-        (resultSet, rowNum) -> Map.entry(
+            where JOB_EXECUTION_ID in (%s)
+              and PARAMETER_NAME <> 'requestedAt'
+            order by JOB_EXECUTION_ID asc, PARAMETER_NAME asc
+            """.formatted(placeholders),
+        (resultSet, rowNum) -> new BatchExecutionParam(
+            resultSet.getLong("JOB_EXECUTION_ID"),
             resultSet.getString("PARAMETER_NAME"),
             resultSet.getString("PARAMETER_VALUE")
         ),
-        jobExecutionId
+        jobExecutionIds.toArray()
     );
 
-    Map<String, String> params = new LinkedHashMap<>();
-    for (Map.Entry<String, String> entry : entries) {
-      if ("requestedAt".equals(entry.getKey())) {
-        continue;
-      }
-      params.put(entry.getKey(), entry.getValue());
+    Map<Long, Map<String, String>> paramsByExecutionId = new LinkedHashMap<>();
+    for (BatchExecutionParam param : params) {
+      paramsByExecutionId.computeIfAbsent(param.jobExecutionId(), ignored -> new LinkedHashMap<>())
+          .put(param.parameterName(), param.parameterValue());
     }
-    return params;
+    return paramsByExecutionId;
   }
 
   private LocalDateTime toLocalDateTime(java.sql.Timestamp timestamp) {
     return timestamp == null ? null : timestamp.toLocalDateTime();
+  }
+
+  private record BatchExecutionSummary(
+      long jobInstanceId,
+      String jobName,
+      long jobExecutionId,
+      String status,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String exitCode
+  ) {
+  }
+
+  private record BatchExecutionParam(
+      long jobExecutionId,
+      String parameterName,
+      String parameterValue
+  ) {
   }
 }

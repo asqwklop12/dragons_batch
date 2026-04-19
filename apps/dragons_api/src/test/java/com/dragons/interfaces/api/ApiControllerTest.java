@@ -188,9 +188,9 @@ class ApiControllerTest extends MySqlContainerTestSupport {
             )
         );
 
-    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
-    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
-    sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    for (int index = 0; index < 21; index++) {
+      sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+    }
 
     HttpResponse<String> limitedResponse = sendGet("/api/batch/status?limit=2");
     HttpResponse<String> cappedResponse = sendGet("/api/batch/status?limit=999");
@@ -200,7 +200,8 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(occurrencesOf(limitedResponse.body(), "\"jobName\":\"kamisPriceJob\"")).isEqualTo(2);
 
     assertThat(cappedResponse.statusCode()).isEqualTo(200);
-    assertThat(cappedResponse.body()).contains("\"count\":3");
+    assertThat(cappedResponse.body()).contains("\"count\":20");
+    assertThat(occurrencesOf(cappedResponse.body(), "\"jobName\":\"kamisPriceJob\"")).isEqualTo(20);
   }
 
   @Test

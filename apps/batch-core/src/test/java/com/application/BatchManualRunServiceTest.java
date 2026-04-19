@@ -7,8 +7,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -28,9 +31,10 @@ class BatchManualRunServiceTest {
     JobOperator jobOperator = mock(JobOperator.class);
     Job kamisPriceJob = mock(Job.class);
     JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    Clock clock = Clock.fixed(Instant.parse("2026-04-18T00:00:00Z"), ZoneOffset.UTC);
     JobExecution jobExecution = mock(JobExecution.class);
     StepExecution stepExecution = mock(StepExecution.class);
-    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate);
+    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate, clock);
     LocalDate regDay = LocalDate.of(2024, 1, 15);
 
     given(jobOperator.start(eq(kamisPriceJob), org.mockito.ArgumentMatchers.any(JobParameters.class)))
@@ -50,7 +54,7 @@ class BatchManualRunServiceTest {
     JobParameters jobParameters = jobParametersCaptor.getValue();
     assertThat(jobParameters.getString("itemCategoryCode")).isEqualTo("200");
     assertThat(jobParameters.getString("regDay")).isEqualTo("2024-01-15");
-    assertThat(jobParameters.getLong("requestedAt")).isNotNull();
+    assertThat(jobParameters.getLong("requestedAt")).isEqualTo(clock.millis());
 
     assertThat(result.jobExecutionId()).isEqualTo(31L);
     assertThat(result.status()).isEqualTo("COMPLETED");
@@ -64,8 +68,9 @@ class BatchManualRunServiceTest {
     JobOperator jobOperator = mock(JobOperator.class);
     Job kamisPriceJob = mock(Job.class);
     JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    Clock clock = Clock.fixed(Instant.parse("2026-04-18T00:00:00Z"), ZoneOffset.UTC);
     JobExecution jobExecution = mock(JobExecution.class);
-    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate);
+    BatchManualRunService batchManualRunService = new BatchManualRunService(jobOperator, kamisPriceJob, jdbcTemplate, clock);
     RuntimeException failure = new RuntimeException("writer failed");
 
     given(jobOperator.start(eq(kamisPriceJob), org.mockito.ArgumentMatchers.any(JobParameters.class)))

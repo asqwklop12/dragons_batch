@@ -48,7 +48,7 @@ public class BatchApiController {
             formatDateTime(result.endTime()),
             itemCategoryCode,
             targetRegDay,
-            false
+            marketPriceApiProperties.isMockMode()
     ));
   }
 
