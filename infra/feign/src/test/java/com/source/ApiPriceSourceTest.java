@@ -7,8 +7,10 @@ import static org.mockito.Mockito.verify;
 
 import com.client.MarketPriceClient;
 import com.dto.MarketPriceDailyResponse;
+import com.dto.MarketPriceMonthlyResponse;
 import com.properties.MarketPriceApiProperties;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import model.price.PriceReadItem;
 import org.junit.jupiter.api.Test;
@@ -86,5 +88,61 @@ class ApiPriceSourceTest {
       assertThat(item.price()).isEqualTo(12000);
       assertThat(item.regDay()).isEqualTo(regDay);
     });
+  }
+
+  @Test
+  void readInMonthUsesMonthlySalesParametersAndMapsAvailableDays() {
+    MarketPriceClient marketPriceClient = mock(MarketPriceClient.class);
+    MarketPriceApiProperties properties = new MarketPriceApiProperties();
+    properties.setCertKey("test-key");
+    properties.setCertId("test-id");
+    ApiPriceSource apiPriceSource = new ApiPriceSource(marketPriceClient, properties);
+    YearMonth yearMonth = YearMonth.of(2024, 1);
+
+    given(marketPriceClient.fetchMonthlyPricesInternal(
+        "monthlySalesList",
+        "json",
+        "test-key",
+        "test-id",
+        "2024",
+        "01",
+        "200"
+    )).willReturn(new MarketPriceMonthlyResponse(
+        new MarketPriceMonthlyResponse.MarketPriceMonthlyData(
+            List.of(
+                new MarketPriceMonthlyResponse.MarketPriceMonthlyItem(
+                    "111",
+                    "배추",
+                    "01",
+                    "일반",
+                    "100",
+                    "서울",
+                    "01",
+                    "상품",
+                    "10kg",
+                    "2024/01/15",
+                    "12,000",
+                    "2024/01/16",
+                    "11,500",
+                    "01"
+                )
+            )
+        )
+    ));
+
+    List<PriceReadItem> result = apiPriceSource.readInMonth("200", yearMonth);
+
+    verify(marketPriceClient).fetchMonthlyPricesInternal(
+        "monthlySalesList",
+        "json",
+        "test-key",
+        "test-id",
+        "2024",
+        "01",
+        "200"
+    );
+    assertThat(result).hasSize(2);
+    assertThat(result).extracting(PriceReadItem::regDay)
+        .containsExactly(LocalDate.of(2024, 1, 15), LocalDate.of(2024, 1, 16));
   }
 }

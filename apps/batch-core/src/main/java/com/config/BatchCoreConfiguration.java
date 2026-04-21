@@ -1,11 +1,14 @@
 package com.config;
 
+import com.application.MonthlyPriceReadService;
 import com.application.PriceReadService;
 import com.process.KamisItemProcessor;
 import com.read.KamisItemReader;
+import com.read.KamisMonthlyItemReader;
 import com.write.KamisItemWriter;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import model.price.PriceData;
 import model.price.PriceDataRepository;
 import model.price.PriceReadItem;
@@ -19,6 +22,7 @@ import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,6 +52,25 @@ public class BatchCoreConfiguration {
   }
 
   @Bean
+  @StepScope
+  ItemReader<PriceReadItem> kamisMonthlyItemReader(
+      MonthlyPriceReadService monthlyPriceReadService,
+      @Value("#{jobParameters['itemCategoryCode']}") String itemCategoryCode,
+      @Value("#{jobParameters['yyyy']}") String yyyy,
+      @Value("#{jobParameters['mm']}") String mm
+  ) {
+    YearMonth yearMonth = (yyyy == null || yyyy.isBlank() || mm == null || mm.isBlank())
+        ? YearMonth.now()
+        : YearMonth.of(Integer.parseInt(yyyy), Integer.parseInt(mm));
+
+    return new KamisMonthlyItemReader(
+        monthlyPriceReadService,
+        itemCategoryCode == null || itemCategoryCode.isBlank() ? "200" : itemCategoryCode,
+        yearMonth
+    );
+  }
+
+  @Bean
   ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor(Clock batchClock) {
     return new KamisItemProcessor(batchClock);
   }
@@ -61,7 +84,7 @@ public class BatchCoreConfiguration {
   Step kamisPriceStep(
       JobRepository jobRepository,
       PlatformTransactionManager transactionManager,
-      ItemReader<PriceReadItem> kamisItemReader,
+      @Qualifier("kamisItemReader") ItemReader<PriceReadItem> kamisItemReader,
       ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor,
       ItemWriter<PriceData> kamisItemWriter
   ) {
@@ -75,9 +98,36 @@ public class BatchCoreConfiguration {
   }
 
   @Bean
-  Job kamisPriceJob(JobRepository jobRepository, Step kamisPriceStep) {
+  Job kamisPriceJob(JobRepository jobRepository, @Qualifier("kamisPriceStep") Step kamisPriceStep) {
     return new JobBuilder("kamisPriceJob", jobRepository)
         .start(kamisPriceStep)
+        .build();
+  }
+
+  @Bean
+  Step kamisMonthlyPriceStep(
+      JobRepository jobRepository,
+      PlatformTransactionManager transactionManager,
+      @Qualifier("kamisMonthlyItemReader") ItemReader<PriceReadItem> kamisMonthlyItemReader,
+      ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor,
+      ItemWriter<PriceData> kamisItemWriter
+  ) {
+    return new StepBuilder("kamisMonthlyPriceStep", jobRepository)
+        .<PriceReadItem, PriceData>chunk(CHUNK_SIZE)
+        .transactionManager(transactionManager)
+        .reader(kamisMonthlyItemReader)
+        .processor(kamisItemProcessor)
+        .writer(kamisItemWriter)
+        .build();
+  }
+
+  @Bean
+  Job kamisMonthlyPriceJob(
+      JobRepository jobRepository,
+      @Qualifier("kamisMonthlyPriceStep") Step kamisMonthlyPriceStep
+  ) {
+    return new JobBuilder("kamisMonthlyPriceJob", jobRepository)
+        .start(kamisMonthlyPriceStep)
         .build();
   }
 }
