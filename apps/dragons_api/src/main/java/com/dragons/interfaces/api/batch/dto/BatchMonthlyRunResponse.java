@@ -6,8 +6,8 @@ public record BatchMonthlyRunResponse(
     String startTime,
     String endTime,
     String itemCategoryCode,
-    String yyyy,
-    String mm,
+    String year,
+    String month,
     boolean mockMode
 ) {
 }

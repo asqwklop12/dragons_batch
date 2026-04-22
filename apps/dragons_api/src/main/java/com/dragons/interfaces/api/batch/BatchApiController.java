@@ -64,7 +64,7 @@ public class BatchApiController {
   @Operation(summary = "월별 배치 수동 실행")
   public ApiResponse<BatchMonthlyRunResponse> runMonthlyBatch(@Valid @ModelAttribute BatchMonthlyRunRequest request) {
     String itemCategoryCode = resolveItemCategoryCode(request.itemCategoryCode());
-    YearMonth targetYearMonth = resolveYearMonth(request.yyyy(), request.mm());
+    YearMonth targetYearMonth = resolveYearMonth(request.year(), request.month());
     BatchRunResult result = batchMonthlyRunService.run(itemCategoryCode, targetYearMonth);
 
     return ApiResponse.successResponse(
