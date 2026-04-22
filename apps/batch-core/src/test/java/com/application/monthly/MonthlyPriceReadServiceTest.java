@@ -2,6 +2,7 @@ package com.application.monthly;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import com.application.MonthlyPriceReadService;
 import java.time.LocalDate;
@@ -15,7 +16,7 @@ class MonthlyPriceReadServiceTest {
 
   @Test
   void readItemsDelegatesToMonthlyReader() {
-    MonthlyPriceReader monthlyPriceReader = org.mockito.Mockito.mock(MonthlyPriceReader.class);
+    MonthlyPriceReader monthlyPriceReader = mock(MonthlyPriceReader.class);
     MonthlyPriceReadService monthlyPriceReadService = new MonthlyPriceReadService(monthlyPriceReader);
     YearMonth yearMonth = YearMonth.of(2024, 1);
     List<PriceReadItem> expected = List.of(

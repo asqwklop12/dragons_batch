@@ -2,6 +2,9 @@ package com.read;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.application.MonthlyPriceReadService;
 import java.time.LocalDate;
@@ -14,7 +17,7 @@ class KamisMonthlyItemReaderTest {
 
   @Test
   void readReturnsMonthlyItemsInOrderAndThenNull() {
-    MonthlyPriceReadService monthlyPriceReadService = org.mockito.Mockito.mock(MonthlyPriceReadService.class);
+    MonthlyPriceReadService monthlyPriceReadService = mock(MonthlyPriceReadService.class);
     YearMonth yearMonth = YearMonth.of(2024, 1);
 
     given(monthlyPriceReadService.readItems("200", yearMonth))
@@ -30,5 +33,19 @@ class KamisMonthlyItemReaderTest {
     assertThat(reader.read().itemCode()).isEqualTo("111");
     assertThat(reader.read().itemCode()).isEqualTo("112");
     assertThat(reader.read()).isNull();
+    verify(monthlyPriceReadService, times(1)).readItems("200", yearMonth);
+  }
+
+  @Test
+  void readReturnsNullImmediatelyWhenMonthlyItemsAreEmpty() {
+    MonthlyPriceReadService monthlyPriceReadService = mock(MonthlyPriceReadService.class);
+    YearMonth yearMonth = YearMonth.of(2024, 1);
+
+    given(monthlyPriceReadService.readItems("200", yearMonth)).willReturn(List.of());
+
+    KamisMonthlyItemReader reader = new KamisMonthlyItemReader(monthlyPriceReadService, "200", yearMonth);
+
+    assertThat(reader.read()).isNull();
+    verify(monthlyPriceReadService, times(1)).readItems("200", yearMonth);
   }
 }

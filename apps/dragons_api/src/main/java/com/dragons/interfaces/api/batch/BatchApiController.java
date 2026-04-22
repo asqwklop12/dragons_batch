@@ -1,7 +1,7 @@
 package com.dragons.interfaces.api.batch;
 
-import com.application.BatchMonthlyRunService;
 import com.application.BatchManualRunService;
+import com.application.BatchMonthlyRunService;
 import com.application.BatchRunResult;
 import com.application.BatchStatusResult;
 import com.dragons.interfaces.api.batch.dto.BatchConfigResponse;
@@ -17,15 +17,18 @@ import com.properties.MarketPriceApiProperties;
 import constant.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/batch")
@@ -59,7 +62,7 @@ public class BatchApiController {
 
   @PostMapping("/run-monthly")
   @Operation(summary = "월별 배치 수동 실행")
-  public ApiResponse<BatchMonthlyRunResponse> runMonthlyBatch(@ModelAttribute BatchMonthlyRunRequest request) {
+  public ApiResponse<BatchMonthlyRunResponse> runMonthlyBatch(@Valid @ModelAttribute BatchMonthlyRunRequest request) {
     String itemCategoryCode = resolveItemCategoryCode(request.itemCategoryCode());
     YearMonth targetYearMonth = resolveYearMonth(request.yyyy(), request.mm());
     BatchRunResult result = batchMonthlyRunService.run(itemCategoryCode, targetYearMonth);
@@ -140,10 +143,21 @@ public class BatchApiController {
   }
 
   private YearMonth resolveYearMonth(String yyyy, String mm) {
-    if (yyyy == null || yyyy.isBlank() || mm == null || mm.isBlank()) {
+    boolean yyyyProvided = yyyy != null && !yyyy.isBlank();
+    boolean mmProvided = mm != null && !mm.isBlank();
+
+    if (!yyyyProvided && !mmProvided) {
       return YearMonth.now();
     }
-    return YearMonth.of(Integer.parseInt(yyyy), Integer.parseInt(mm));
+    if (yyyyProvided != mmProvided) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "yyyy와 mm은 함께 입력해야 합니다.");
+    }
+
+    try {
+      return YearMonth.of(Integer.parseInt(yyyy), Integer.parseInt(mm));
+    } catch (NumberFormatException | DateTimeException exception) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "yyyy/mm 형식이 올바르지 않습니다.", exception);
+    }
   }
 
   private String formatDateTime(java.time.LocalDateTime value) {

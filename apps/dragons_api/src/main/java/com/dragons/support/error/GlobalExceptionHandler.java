@@ -5,7 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.validation.BindException;
 import com.dragons.support.ApiResponse;
 
 @RestControllerAdvice
@@ -18,6 +20,23 @@ public class GlobalExceptionHandler {
     String value = e.getValue() == null ? "null" : String.valueOf(e.getValue());
     String message = String.format("요청 파라미터 '%s' 값 '%s'이(가) 올바르지 않습니다.", e.getName(), value);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.failResponse(message));
+  }
+
+  @ExceptionHandler(BindException.class)
+  public ResponseEntity<ApiResponse<Void>> handleBindException(BindException e) {
+    String message = e.getBindingResult().getAllErrors().stream()
+        .findFirst()
+        .map(error -> error.getDefaultMessage() == null ? "요청 값이 올바르지 않습니다." : error.getDefaultMessage())
+        .orElse("요청 값이 올바르지 않습니다.");
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.failResponse(message));
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(ResponseStatusException e) {
+    String message = e.getReason() == null ? "요청 값이 올바르지 않습니다." : e.getReason();
+    return ResponseEntity.status(e.getStatusCode())
         .body(ApiResponse.failResponse(message));
   }
 

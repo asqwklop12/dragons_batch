@@ -7,6 +7,7 @@ import com.properties.MarketPriceApiProperties;
 import constant.Constants;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +127,12 @@ public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
       return Optional.empty();
     }
 
-    LocalDate regDay = LocalDate.parse(day, KAMIS_DATE_FORMATTER);
+    final LocalDate regDay;
+    try {
+      regDay = LocalDate.parse(day, KAMIS_DATE_FORMATTER);
+    } catch (DateTimeParseException exception) {
+      return Optional.empty();
+    }
     if (!YearMonth.from(regDay).equals(targetYearMonth)) {
       return Optional.empty();
     }
