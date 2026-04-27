@@ -142,21 +142,21 @@ public class BatchApiController {
         : request.regDay();
   }
 
-  private YearMonth resolveYearMonth(String yyyy, String mm) {
-    boolean yyyyProvided = yyyy != null && !yyyy.isBlank();
-    boolean mmProvided = mm != null && !mm.isBlank();
+  private YearMonth resolveYearMonth(String year, String month) {
+    boolean yearProvided = year != null && !year.isBlank();
+    boolean monthProvided = month != null && !month.isBlank();
 
-    if (!yyyyProvided && !mmProvided) {
+    if (!yearProvided && !monthProvided) {
       return YearMonth.now();
     }
-    if (yyyyProvided != mmProvided) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "yyyy와 mm은 함께 입력해야 합니다.");
+    if (yearProvided != monthProvided) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "year와 month는 함께 입력해야 합니다.");
     }
 
     try {
-      return YearMonth.of(Integer.parseInt(yyyy), Integer.parseInt(mm));
+      return YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
     } catch (NumberFormatException | DateTimeException exception) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "yyyy/mm 형식이 올바르지 않습니다.", exception);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "year/month 형식이 올바르지 않습니다.", exception);
     }
   }
 

@@ -139,7 +139,7 @@ class ApiControllerTest extends MySqlContainerTestSupport {
         );
 
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&yyyy=2024&mm=01"))
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=2024&month=01"))
         .POST(HttpRequest.BodyPublishers.noBody())
         .build();
 
@@ -149,8 +149,8 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.body()).contains("\"success\":true");
     assertThat(response.body()).contains("\"jobExecutionId\":");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
-    assertThat(response.body()).contains("\"yyyy\":\"2024\"");
-    assertThat(response.body()).contains("\"mm\":\"01\"");
+    assertThat(response.body()).contains("\"year\":\"2024\"");
+    assertThat(response.body()).contains("\"month\":\"01\"");
     assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
         .isEqualTo(1);
     assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
