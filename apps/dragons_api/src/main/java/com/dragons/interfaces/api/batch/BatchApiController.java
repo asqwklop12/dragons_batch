@@ -133,7 +133,12 @@ public class BatchApiController {
   }
 
   private String resolveItemCategoryCode(String itemCategoryCode) {
-    return itemCategoryCode == null || itemCategoryCode.isBlank() ? "200" : itemCategoryCode;
+    if (itemCategoryCode == null) {
+      return "200";
+    }
+
+    String normalized = itemCategoryCode.trim();
+    return normalized.isEmpty() ? "200" : normalized;
   }
 
   private String resolveRegDay(BatchRunRequest request) {

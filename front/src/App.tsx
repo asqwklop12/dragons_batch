@@ -560,11 +560,11 @@ export default function App() {
                   <span className={styles.summaryValue}>
                     {batchConfig == null
                       ? '확인 중...'
-                      : batchConfig.apiConfigured
-                        ? batchConfig.mockMode
-                          ? 'Mock 모드'
-                          : '준비 완료'
-                        : '설정 필요'}
+                      : batchConfig.mockMode
+                        ? 'Mock 모드'
+                        : batchConfig.apiConfigured
+                          ? '준비 완료'
+                          : '설정 필요'}
                   </span>
                 </div>
                 <div className={styles.summaryPill}>
