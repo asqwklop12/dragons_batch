@@ -29,7 +29,11 @@ function createInitialMonthlyForm(): MonthlyRunForm {
 }
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function formatDateTime(value: string | null) {
@@ -422,6 +426,7 @@ export default function App() {
         <p>품목명을 검색하거나 카테고리를 선택해 가격 정보를 확인하세요</p>
         <form className={styles.searchBar} onSubmit={handleSearch}>
           <input
+            aria-label="품목명 검색"
             placeholder="예: 배추, 사과, 쌀..."
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}

@@ -88,7 +88,7 @@ public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
     }
 
     return response.data().item().stream()
-        .flatMap(item -> toMonthlyReadItems(item, yearMonth).stream())
+        .flatMap(item -> toMonthlyReadItems(item, yearMonth, itemCategoryCode).stream())
         .toList();
   }
 
@@ -105,12 +105,13 @@ public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
 
   private List<PriceReadItem> toMonthlyReadItems(
       MarketPriceMonthlyResponse.MarketPriceMonthlyItem item,
-      YearMonth targetYearMonth
+      YearMonth targetYearMonth,
+      String itemCategoryCode
   ) {
     List<PriceReadItem> items = new ArrayList<>();
     Stream.of(
-            monthlyEntry(item, item.day1(), item.dpr1(), targetYearMonth),
-            monthlyEntry(item, item.day2(), item.dpr2(), targetYearMonth)
+            monthlyEntry(item, item.day1(), item.dpr1(), targetYearMonth, itemCategoryCode),
+            monthlyEntry(item, item.day2(), item.dpr2(), targetYearMonth, itemCategoryCode)
         )
         .flatMap(Optional::stream)
         .forEach(items::add);
@@ -121,7 +122,8 @@ public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
       MarketPriceMonthlyResponse.MarketPriceMonthlyItem item,
       String day,
       String price,
-      YearMonth targetYearMonth
+      YearMonth targetYearMonth,
+      String itemCategoryCode
   ) {
     if (day == null || day.isBlank() || price == null || price.isBlank()) {
       return Optional.empty();
@@ -142,13 +144,25 @@ public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
         item.itemName(),
         item.kindCode(),
         item.kindName(),
-        item.marketCode(),
-        item.marketName(),
+        itemCategoryCode,
+        categoryNameOf(itemCategoryCode),
         item.rankCode(),
         item.rankName(),
         parsePrice(price),
         item.unit(),
         regDay
     ));
+  }
+
+  private String categoryNameOf(String itemCategoryCode) {
+    return switch (itemCategoryCode) {
+      case "100" -> "식량작물";
+      case "200" -> "채소류";
+      case "300" -> "특용작물";
+      case "400" -> "과일류";
+      case "500" -> "축산물";
+      case "600" -> "수산물";
+      default -> Constants.NOT_APPLICABLE;
+    };
   }
 }

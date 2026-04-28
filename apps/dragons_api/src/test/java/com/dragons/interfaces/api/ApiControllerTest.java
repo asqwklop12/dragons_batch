@@ -159,6 +159,32 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   }
 
   @Test
+  void runMonthlyBatchReturnsBadRequestForInvalidYearMonth() throws Exception {
+    HttpRequest invalidYearRequest = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=20&month=01"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+    HttpRequest invalidMonthRequest = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=2024&month=13"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+
+    HttpResponse<String> invalidYearResponse = httpClient.send(invalidYearRequest, HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> invalidMonthResponse = httpClient.send(invalidMonthRequest, HttpResponse.BodyHandlers.ofString());
+
+    assertThat(invalidYearResponse.statusCode()).isEqualTo(400);
+    assertThat(invalidYearResponse.body()).contains("\"success\":false");
+    assertThat(invalidYearResponse.body()).contains("year는 4자리 연도여야 합니다.");
+    assertThat(invalidMonthResponse.statusCode()).isEqualTo(400);
+    assertThat(invalidMonthResponse.body()).contains("\"success\":false");
+    assertThat(invalidMonthResponse.body()).contains("month는 01~12 형식이어야 합니다.");
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
+        .isEqualTo(0);
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
+        .isEmpty();
+  }
+
+  @Test
   void runBatchPersistsExecutionMetadataInDatabase() throws Exception {
     LocalDate regDay = LocalDate.of(2024, 1, 15);
     given(priceReadService.readItems("200", regDay))

@@ -7,4 +7,6 @@ export const ITEM_CATEGORIES = [
   { value: '600', label: '수산물', emoji: '🐟' },
 ] as const;
 
-export const DEFAULT_ITEM_CATEGORY = '100';
+export type ItemCategoryCode = (typeof ITEM_CATEGORIES)[number]['value'];
+
+export const DEFAULT_ITEM_CATEGORY: ItemCategoryCode = ITEM_CATEGORIES[0]?.value ?? '100';

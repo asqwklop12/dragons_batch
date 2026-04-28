@@ -12,7 +12,7 @@
   --red: #c62828;
   --radius: 12px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  font-family: 'Pretendard', 'Segoe UI', system-ui, sans-serif;
+  font-family: Pretendard, "Segoe UI", system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
   line-height: 1.6;
@@ -138,6 +138,19 @@ a {
   font-size: 14px;
   outline: none;
   color: var(--text);
+}
+
+.searchBar input:focus-visible,
+.filterRow input:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+.categoryTab:focus-visible,
+.lineLegendItem:focus-visible,
+.priceCard:focus-visible {
+  outline: 2px solid var(--accent2);
+  outline-offset: 2px;
 }
 
 .searchBar button {
