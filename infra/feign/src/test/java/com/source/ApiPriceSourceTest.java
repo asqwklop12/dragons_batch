@@ -213,6 +213,47 @@ class ApiPriceSourceTest {
   }
 
   @Test
+  void readInMonthSkipsMalformedDayValuesInsteadOfThrowing() {
+    MarketPriceClient marketPriceClient = mock(MarketPriceClient.class);
+    MarketPriceApiProperties properties = new MarketPriceApiProperties();
+    properties.setCertKey("test-key");
+    properties.setCertId("test-id");
+    ApiPriceSource apiPriceSource = new ApiPriceSource(marketPriceClient, properties);
+    YearMonth yearMonth = YearMonth.of(2024, 1);
+
+    given(marketPriceClient.fetchMonthlyPricesInternal(
+        "monthlySalesList",
+        "json",
+        "test-key",
+        "test-id",
+        "2024",
+        "01",
+        "200"
+    )).willReturn(new MarketPriceMonthlyResponse(
+        new MarketPriceMonthlyResponse.MarketPriceMonthlyData(
+            List.of(
+                new MarketPriceMonthlyResponse.MarketPriceMonthlyItem(
+                    "111", "배추", "01", "일반", "100", "서울", "01", "상품", "10kg",
+                    "-", "12,000", "2024/01/16", "11,500", "01"
+                ),
+                new MarketPriceMonthlyResponse.MarketPriceMonthlyItem(
+                    "112", "무", "01", "일반", "100", "서울", "01", "상품", "20kg",
+                    "N/A", "8,000", "2024/13/40", "7,500", "01"
+                )
+            )
+        )
+    ));
+
+    List<PriceReadItem> result = apiPriceSource.readInMonth("200", yearMonth);
+
+    assertThat(result).singleElement().satisfies(item -> {
+      assertThat(item.regDay()).isEqualTo(LocalDate.of(2024, 1, 16));
+      assertThat(item.marketCode()).isEqualTo("200");
+      assertThat(item.marketName()).isEqualTo("채소류");
+    });
+  }
+
+  @Test
   void readInMonthReturnsEmptyWhenMonthlyDataIsNull() {
     MarketPriceClient marketPriceClient = mock(MarketPriceClient.class);
     MarketPriceApiProperties properties = new MarketPriceApiProperties();

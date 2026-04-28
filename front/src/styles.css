@@ -1,0 +1,763 @@
+:root {
+  --bg: #f0f4f8;
+  --white: #ffffff;
+  --surface2: #f7fafc;
+  --border: #e2e8f0;
+  --accent: #2e7d32;
+  --accent-light: #e8f5e9;
+  --accent2: #f57c00;
+  --text: #1a202c;
+  --text-muted: #718096;
+  --warn: #f59e0b;
+  --red: #c62828;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: Pretendard, "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--accent);
+  color: white;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 24px;
+}
+
+.headerLeft h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.headerLeft p {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.headerNav a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.15s;
+}
+
+.headerNav a:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.hero {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+  color: white;
+  padding: 48px 32px 40px;
+  text-align: center;
+}
+
+.hero h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.hero p {
+  margin: 0 0 28px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.searchBar {
+  display: flex;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.searchBar input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  color: var(--text);
+}
+
+.searchBar input:focus-visible,
+.filterRow input:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+.categoryTab:focus-visible,
+.lineLegendItem:focus-visible,
+.priceCard:focus-visible {
+  outline: 2px solid var(--accent2);
+  outline-offset: 2px;
+}
+
+.searchBar button {
+  padding: 12px 20px;
+  background: var(--accent2);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.categoryTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  background: var(--white);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+}
+
+.categoryTab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.categoryTabActive {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.filterRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filterRow label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.filterRow input,
+.field input,
+.field select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  background: var(--white);
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.cardHead {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardHead h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.cardBody {
+  padding: 16px;
+}
+
+.tableCardBody {
+  padding: 0;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.monthlyForm {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.8fr auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btnGreen,
+.btnOutline {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnGreen {
+  background: var(--accent);
+  color: white;
+}
+
+.btnGreen:hover {
+  background: #1b5e20;
+}
+
+.btnOutline {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btnOutline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btnGreen:disabled,
+.btnOutline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.resultBox {
+  min-height: 88px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  font-size: 13px;
+}
+
+.resultBox strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.metaLine {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.batchSummary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.summaryPill {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--surface2);
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.summaryValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.batchActionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.batchList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.batchItem {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--surface2);
+}
+
+.batchItemHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.batchItemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.batchItemMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusSuccess {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.statusFailed {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.statusRunning {
+  background: #fff8e1;
+  color: #e65100;
+}
+
+.statusIdle {
+  background: #eceff1;
+  color: #546e7a;
+}
+
+.chartWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lineChartSvg {
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfefe 0%, #f3f7fb 100%);
+  border: 1px solid var(--border);
+}
+
+.clickablePoint {
+  cursor: pointer;
+}
+
+.lineAxis {
+  stroke: #dbe5ef;
+  stroke-width: 2;
+}
+
+.lineArea {
+  fill: rgba(46, 125, 50, 0.08);
+}
+
+.linePath {
+  fill: none;
+  stroke: url(#price-line-gradient);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.linePoint {
+  stroke: white;
+  stroke-width: 3;
+}
+
+.lineValue {
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.lineLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.lineLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 6px;
+}
+
+.lineLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--surface2) 100%);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lineLegendItem strong {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.lineLegendItem p {
+  margin: 1px 0 0;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.lineLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.monthlyTrendPath {
+  fill: none;
+  stroke: url(#monthly-trend-gradient);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.monthlyTrendPoint {
+  fill: #42a5f5;
+  stroke: white;
+  stroke-width: 3;
+}
+
+.monthlyTrendLabel {
+  fill: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.monthlyTrendLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.monthlyTrendLegendItem {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--surface2) 100%);
+}
+
+.monthlyTrendLegendItem strong {
+  display: block;
+  font-size: 10px;
+}
+
+.monthlyTrendLegendItem p {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.priceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.priceCard {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+}
+
+.itemName {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.itemKind,
+.itemUnit,
+.itemMarket {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.itemKind {
+  margin-bottom: 8px;
+}
+
+.itemPrice {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.itemMarket {
+  margin-top: 6px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  background: #f7fafc;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: #f7fafc;
+}
+
+.priceValue {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.rankBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rankGood {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.rankMid {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.rankLow {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.rankDefault {
+  background: #eceff1;
+  color: #546e7a;
+}
+
+.alertError {
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  color: var(--red);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+
+.loadingState,
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.emptyState small {
+  display: block;
+  margin-top: 6px;
+}
+
+@media (max-width: 980px) {
+  .monthlyForm,
+  .gridTwo,
+  .batchSummary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .hero h2 {
+    font-size: 22px;
+  }
+
+  .header {
+    padding: 0 16px;
+  }
+
+  .main {
+    padding: 20px 16px 40px;
+  }
+
+  .searchBar {
+    flex-direction: column;
+  }
+
+  .chartWrap {
+    gap: 10px;
+  }
+}

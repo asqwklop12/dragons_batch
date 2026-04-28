@@ -139,7 +139,7 @@ class ApiControllerTest extends MySqlContainerTestSupport {
         );
 
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&yyyy=2024&mm=01"))
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=2024&month=01"))
         .POST(HttpRequest.BodyPublishers.noBody())
         .build();
 
@@ -149,13 +149,39 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.body()).contains("\"success\":true");
     assertThat(response.body()).contains("\"jobExecutionId\":");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
-    assertThat(response.body()).contains("\"yyyy\":\"2024\"");
-    assertThat(response.body()).contains("\"mm\":\"01\"");
+    assertThat(response.body()).contains("\"year\":\"2024\"");
+    assertThat(response.body()).contains("\"month\":\"01\"");
     assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
         .isEqualTo(1);
     assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
         .extracting(PriceData::getItemCode)
         .containsExactlyInAnyOrderElementsOf(Set.of("911", "912"));
+  }
+
+  @Test
+  void runMonthlyBatchReturnsBadRequestForInvalidYearMonth() throws Exception {
+    HttpRequest invalidYearRequest = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=20&month=01"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+    HttpRequest invalidMonthRequest = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&year=2024&month=13"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+
+    HttpResponse<String> invalidYearResponse = httpClient.send(invalidYearRequest, HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> invalidMonthResponse = httpClient.send(invalidMonthRequest, HttpResponse.BodyHandlers.ofString());
+
+    assertThat(invalidYearResponse.statusCode()).isEqualTo(400);
+    assertThat(invalidYearResponse.body()).contains("\"success\":false");
+    assertThat(invalidYearResponse.body()).contains("year는 4자리 연도여야 합니다.");
+    assertThat(invalidMonthResponse.statusCode()).isEqualTo(400);
+    assertThat(invalidMonthResponse.body()).contains("\"success\":false");
+    assertThat(invalidMonthResponse.body()).contains("month는 01~12 형식이어야 합니다.");
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
+        .isEqualTo(0);
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
+        .isEmpty();
   }
 
   @Test
