@@ -146,10 +146,7 @@ public class BatchApiController {
     boolean yearProvided = year != null && !year.isBlank();
     boolean monthProvided = month != null && !month.isBlank();
 
-    if (!yearProvided && !monthProvided) {
-      return YearMonth.now();
-    }
-    if (yearProvided != monthProvided) {
+    if (!yearProvided || !monthProvided) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "year와 month는 함께 입력해야 합니다.");
     }
 
