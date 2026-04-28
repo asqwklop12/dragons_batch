@@ -4,6 +4,7 @@ import java.util.Map;
 
 public record BatchStatusItemResponse(
     long jobInstanceId,
+    long jobExecutionId,
     String jobName,
     String status,
     String startTime,

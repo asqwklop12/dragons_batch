@@ -3,6 +3,7 @@ package com.dragons.interfaces.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
+import com.application.MonthlyPriceReadService;
 import com.application.PriceReadService;
 import com.support.MySqlContainerTestSupport;
 import com.repository.JpaPriceDataRepository;
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Set;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -46,6 +48,9 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   @MockitoBean
   private PriceReadService priceReadService;
 
+  @MockitoBean
+  private MonthlyPriceReadService monthlyPriceReadService;
+
   @BeforeEach
   void setUp() {
     clearBatchMetadata();
@@ -59,6 +64,8 @@ class ApiControllerTest extends MySqlContainerTestSupport {
         )
     );
     given(priceReadService.readItems(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(LocalDate.class)))
+        .willReturn(List.of());
+    given(monthlyPriceReadService.readItems(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(YearMonth.class)))
         .willReturn(List.of());
   }
 
@@ -121,6 +128,37 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   }
 
   @Test
+  void runMonthlyBatchReturnsBatchExecutionResult() throws Exception {
+    YearMonth yearMonth = YearMonth.of(2024, 1);
+    given(monthlyPriceReadService.readItems("200", yearMonth))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "테스트 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", LocalDate.of(2024, 1, 15)),
+                new PriceReadItem("912", "테스트 무", "01", "일반", "100", "서울", "01", "상품", 23456, "20kg", LocalDate.of(2024, 1, 16))
+            )
+        );
+
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl() + "/api/batch/run-monthly?itemCategoryCode=200&yyyy=2024&mm=01"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .build();
+
+    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"success\":true");
+    assertThat(response.body()).contains("\"jobExecutionId\":");
+    assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
+    assertThat(response.body()).contains("\"yyyy\":\"2024\"");
+    assertThat(response.body()).contains("\"mm\":\"01\"");
+    assertThat(jdbcTemplate.queryForObject("select count(*) from BATCH_JOB_EXECUTION", Integer.class))
+        .isEqualTo(1);
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("테스트"))
+        .extracting(PriceData::getItemCode)
+        .containsExactlyInAnyOrderElementsOf(Set.of("911", "912"));
+  }
+
+  @Test
   void runBatchPersistsExecutionMetadataInDatabase() throws Exception {
     LocalDate regDay = LocalDate.of(2024, 1, 15);
     given(priceReadService.readItems("200", regDay))
@@ -150,6 +188,7 @@ class ApiControllerTest extends MySqlContainerTestSupport {
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("\"count\":0");
     assertThat(response.body()).contains("\"mockMode\":false");
+    assertThat(response.body()).contains("\"apiConfigured\":true");
     assertThat(response.body()).contains("\"data\":[]");
   }
 
@@ -170,7 +209,9 @@ class ApiControllerTest extends MySqlContainerTestSupport {
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("\"count\":2");
+    assertThat(response.body()).contains("\"apiConfigured\":true");
     assertThat(response.body()).contains("\"jobName\":\"kamisPriceJob\"");
+    assertThat(response.body()).contains("\"jobExecutionId\":");
     assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
     assertThat(response.body()).contains("\"exitCode\":\"COMPLETED\"");
     assertThat(response.body()).contains("\"itemCategoryCode\":\"200\"");

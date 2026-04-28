@@ -2,24 +2,33 @@ package com.source;
 
 import com.client.MarketPriceClient;
 import com.dto.MarketPriceDailyResponse;
+import com.dto.MarketPriceMonthlyResponse;
 import com.properties.MarketPriceApiProperties;
 import constant.Constants;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import model.price.MonthlyPriceReader;
 import model.price.PriceReadItem;
 import model.price.PriceReader;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ApiPriceSource implements PriceReader {
+public class ApiPriceSource implements PriceReader, MonthlyPriceReader {
 
   private static final String DEFAULT_PERIOD = "3";
   private static final String DEFAULT_ITEM_CODE = "111";
   private static final String DEFAULT_KIND_CODE = "05";
   private static final String DEFAULT_GRADE_RANK = "2";
   private static final String DEFAULT_COUNTY_CODE = "1101";
+  private static final DateTimeFormatter KAMIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
   private final MarketPriceClient marketPriceClient;
   private final MarketPriceApiProperties marketPriceApiProperties;
@@ -62,6 +71,27 @@ public class ApiPriceSource implements PriceReader {
         .toList();
   }
 
+  @Override
+  public List<PriceReadItem> readInMonth(String itemCategoryCode, YearMonth yearMonth) {
+    MarketPriceMonthlyResponse response = marketPriceClient.fetchMonthlyPricesInternal(
+        "monthlySalesList",
+        "json",
+        marketPriceApiProperties.getCertKey(),
+        marketPriceApiProperties.getCertId(),
+        String.valueOf(yearMonth.getYear()),
+        "%02d".formatted(yearMonth.getMonthValue()),
+        itemCategoryCode
+    );
+
+    if (response == null || response.data() == null || response.data().item() == null) {
+      return List.of();
+    }
+
+    return response.data().item().stream()
+        .flatMap(item -> toMonthlyReadItems(item, yearMonth).stream())
+        .toList();
+  }
+
   private int parsePrice(String price) {
     if (price == null) {
       return 0;
@@ -71,5 +101,54 @@ public class ApiPriceSource implements PriceReader {
       return 0;
     }
     return Integer.parseInt(normalized);
+  }
+
+  private List<PriceReadItem> toMonthlyReadItems(
+      MarketPriceMonthlyResponse.MarketPriceMonthlyItem item,
+      YearMonth targetYearMonth
+  ) {
+    List<PriceReadItem> items = new ArrayList<>();
+    Stream.of(
+            monthlyEntry(item, item.day1(), item.dpr1(), targetYearMonth),
+            monthlyEntry(item, item.day2(), item.dpr2(), targetYearMonth)
+        )
+        .flatMap(Optional::stream)
+        .forEach(items::add);
+    return items;
+  }
+
+  private Optional<PriceReadItem> monthlyEntry(
+      MarketPriceMonthlyResponse.MarketPriceMonthlyItem item,
+      String day,
+      String price,
+      YearMonth targetYearMonth
+  ) {
+    if (day == null || day.isBlank() || price == null || price.isBlank()) {
+      return Optional.empty();
+    }
+
+    final LocalDate regDay;
+    try {
+      regDay = LocalDate.parse(day, KAMIS_DATE_FORMATTER);
+    } catch (DateTimeParseException exception) {
+      return Optional.empty();
+    }
+    if (!YearMonth.from(regDay).equals(targetYearMonth)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new PriceReadItem(
+        item.itemCode(),
+        item.itemName(),
+        item.kindCode(),
+        item.kindName(),
+        item.marketCode(),
+        item.marketName(),
+        item.rankCode(),
+        item.rankName(),
+        parsePrice(price),
+        item.unit(),
+        regDay
+    ));
   }
 }
