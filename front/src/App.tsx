@@ -65,6 +65,10 @@ function getCategoryMeta(itemCategoryCode: string) {
   );
 }
 
+function filterByCategory(items: PriceItem[], categoryCode: string) {
+  return items.filter((item) => item.marketCode === categoryCode);
+}
+
 function getStatusTone(status: string) {
   switch (status) {
     case 'COMPLETED':
@@ -86,6 +90,71 @@ function getRankTone(rankName: string) {
   return 'rankDefault';
 }
 
+function toMonthKey(regDay: string) {
+  return regDay.slice(0, 7);
+}
+
+function buildSmoothPath(points: Array<{ x: number; y: number }>) {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const p0 = points[index - 1] ?? points[index];
+    const p1 = points[index];
+    const p2 = points[index + 1];
+    const p3 = points[index + 2] ?? p2;
+
+    const control1X = p1.x + (p2.x - p0.x) / 6;
+    const control1Y = p1.y + (p2.y - p0.y) / 6;
+    const control2X = p2.x - (p3.x - p1.x) / 6;
+    const control2Y = p2.y - (p3.y - p1.y) / 6;
+
+    path += ` C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${p2.x} ${p2.y}`;
+  }
+
+  return path;
+}
+
+function buildAreaPath(points: Array<{ x: number; y: number }>, baselineY: number) {
+  if (points.length === 0) return '';
+  const smoothLine = buildSmoothPath(points);
+  const last = points[points.length - 1];
+  const first = points[0];
+  return `${smoothLine} L ${last.x} ${baselineY} L ${first.x} ${baselineY} Z`;
+}
+
+function createScaledPoints<T extends { value: number }>(
+  rows: T[],
+  width: number,
+  height: number,
+  paddingX: number,
+  paddingTop: number,
+  paddingBottom: number,
+) {
+  const values = rows.map((row) => row.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const rawRange = Math.max(max - min, 1);
+  const paddedMin = Math.max(0, min - rawRange * 0.18);
+  const paddedMax = max + rawRange * 0.18;
+  const scaledRange = Math.max(paddedMax - paddedMin, 1);
+  const usableWidth = width - paddingX * 2;
+  const usableHeight = height - paddingTop - paddingBottom;
+  const stepX = rows.length === 1 ? 0 : usableWidth / (rows.length - 1);
+
+  return rows.map((row, index) => {
+    const x = paddingX + stepX * index;
+    const normalized = (row.value - paddedMin) / scaledRange;
+    const y = paddingTop + usableHeight - usableHeight * normalized;
+    return { ...row, x, y };
+  });
+}
+
 export default function App() {
   const [currentCategory, setCurrentCategory] = useState(DEFAULT_ITEM_CATEGORY);
   const [selectedDate, setSelectedDate] = useState(getToday);
@@ -105,6 +174,10 @@ export default function App() {
   const [isBatchLoading, setIsBatchLoading] = useState(true);
   const [isMonthlySubmitting, setIsMonthlySubmitting] = useState(false);
   const [isHistoryRefreshing, setIsHistoryRefreshing] = useState(false);
+  const [selectedTrendItem, setSelectedTrendItem] = useState<string | null>(null);
+  const [trendItems, setTrendItems] = useState<PriceItem[]>([]);
+  const [isTrendLoading, setIsTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
 
   const batchPageHref = `${getBackendOrigin()}/batch.html`;
 
@@ -114,14 +187,15 @@ export default function App() {
   );
 
   const chartData = useMemo(() => {
-    const grouped = new Map<string, { total: number; count: number }>();
+    const grouped = new Map<string, { total: number; count: number; unit: string }>();
 
     priceItems.forEach((item) => {
       if (!item.price) return;
 
-      const current = grouped.get(item.itemName) ?? { total: 0, count: 0 };
+      const current = grouped.get(item.itemName) ?? { total: 0, count: 0, unit: item.unit };
       current.total += item.price;
       current.count += 1;
+      if (!current.unit && item.unit) current.unit = item.unit;
       grouped.set(item.itemName, current);
     });
 
@@ -129,6 +203,7 @@ export default function App() {
       .map(([label, value], index) => ({
         label,
         value: Math.round(value.total / value.count),
+        unit: value.unit,
         color: `hsl(${(index * 37 + 120) % 360}, 60%, 55%)`,
       }))
       .sort((left, right) => right.value - left.value)
@@ -138,9 +213,27 @@ export default function App() {
 
     return rows.map((row) => ({
       ...row,
-      ratio: max > 0 ? Math.max((row.value / max) * 100, 10) : 0,
+      ratio: max > 0 ? row.value / max : 0,
     }));
   }, [priceItems]);
+
+  const lineChart = useMemo(() => {
+    if (chartData.length === 0) {
+      return null;
+    }
+
+    const width = 760;
+    const height = 260;
+    const paddingX = 40;
+    const paddingTop = 20;
+    const paddingBottom = 36;
+    const points = createScaledPoints(chartData, width, height, paddingX, paddingTop, paddingBottom);
+    const baselineY = height - paddingBottom;
+    const linePath = buildSmoothPath(points);
+    const areaPath = buildAreaPath(points, baselineY);
+
+    return { width, height, paddingBottom, points, linePath, areaPath };
+  }, [chartData]);
 
   const priceCards = useMemo(() => {
     const seen = new Set<string>();
@@ -151,18 +244,62 @@ export default function App() {
     }).slice(0, 12);
   }, [priceItems]);
 
-  async function loadPrices(task: Promise<{ data: PriceItem[] }>, label: string) {
+  const monthlyTrend = useMemo(() => {
+    const grouped = new Map<string, { total: number; count: number; unit: string }>();
+
+    trendItems.forEach((item) => {
+      const key = toMonthKey(item.regDay);
+      const current = grouped.get(key) ?? { total: 0, count: 0, unit: item.unit };
+      current.total += item.price;
+      current.count += 1;
+      if (!current.unit && item.unit) current.unit = item.unit;
+      grouped.set(key, current);
+    });
+
+    const rows = [...grouped.entries()]
+      .map(([month, value]) => ({
+        month,
+        value: Math.round(value.total / value.count),
+        unit: value.unit,
+      }))
+      .sort((left, right) => left.month.localeCompare(right.month));
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const width = 760;
+    const height = 260;
+    const paddingX = 40;
+    const paddingTop = 20;
+    const paddingBottom = 36;
+    const points = createScaledPoints(rows, width, height, paddingX, paddingTop, paddingBottom);
+    const baselineY = height - paddingBottom;
+    const linePath = buildSmoothPath(points);
+    const areaPath = buildAreaPath(points, baselineY);
+
+    return { width, height, paddingBottom, points, linePath, areaPath };
+  }, [trendItems]);
+
+  async function loadPrices(
+    task: Promise<{ data: PriceItem[] }>,
+    label: string,
+    options?: { categoryCode?: string },
+  ) {
     setIsPriceLoading(true);
     setPriceError(null);
 
     try {
       const response = await task;
-      setPriceItems(response.data);
+      const nextItems = options?.categoryCode ? filterByCategory(response.data, options.categoryCode) : response.data;
+      setPriceItems(nextItems);
       setViewLabel(label);
+      return nextItems;
     } catch (error) {
       setPriceError(error instanceof Error ? error.message : '가격 데이터를 불러오지 못했습니다.');
       setPriceItems([]);
       setViewLabel(label);
+      return [];
     } finally {
       setIsPriceLoading(false);
     }
@@ -171,7 +308,10 @@ export default function App() {
   async function loadLatest(categoryCode = currentCategory) {
     const category = getCategoryMeta(categoryCode);
     setCurrentCategory(categoryCode);
-    await loadPrices(fetchLatestPrices(50), category.label);
+    const nextItems = await loadPrices(fetchLatestPrices(500), category.label, { categoryCode });
+    if (nextItems[0]?.regDay) {
+      setSelectedDate(nextItems[0].regDay);
+    }
   }
 
   async function loadByDate() {
@@ -181,7 +321,9 @@ export default function App() {
     }
 
     const category = getCategoryMeta(currentCategory);
-    await loadPrices(fetchPricesByDate(selectedDate), `${category.label} · ${selectedDate}`);
+    await loadPrices(fetchPricesByDate(selectedDate), `${category.label} · ${selectedDate}`, {
+      categoryCode: currentCategory,
+    });
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -210,6 +352,25 @@ export default function App() {
   useEffect(() => {
     void Promise.all([loadLatest(DEFAULT_ITEM_CATEGORY), refreshBatchOverview()]);
   }, []);
+
+  async function loadItemTrend(itemName: string) {
+    setSelectedTrendItem(itemName);
+    setIsTrendLoading(true);
+    setTrendError(null);
+
+    try {
+      const response = await searchPrices(itemName);
+      const exactItems = response.data.filter(
+        (item) => item.itemName === itemName && item.marketCode === currentCategory,
+      );
+      setTrendItems(exactItems);
+    } catch (error) {
+      setTrendError(error instanceof Error ? error.message : '추이 데이터를 불러오지 못했습니다.');
+      setTrendItems([]);
+    } finally {
+      setIsTrendLoading(false);
+    }
+  }
 
   async function handleMonthlySubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -323,7 +484,7 @@ export default function App() {
                   >
                     {ITEM_CATEGORIES.map((category) => (
                       <option key={category.value} value={category.value}>
-                        {category.value} · {category.label}
+                        {category.label}
                       </option>
                     ))}
                   </select>
@@ -431,7 +592,11 @@ export default function App() {
                           <span className={`${styles.statusChip} ${styles[getStatusTone(item.status)]}`}>{item.status}</span>
                         </div>
                         <div className={styles.batchItemMeta}>
-                          카테고리 {params.itemCategoryCode ?? '-'} · 대상 {year}-{month}
+                          카테고리{' '}
+                          {params.itemCategoryCode
+                            ? getCategoryMeta(params.itemCategoryCode).label
+                            : '-'}{' '}
+                          · 대상 {year}-{month}
                         </div>
                         <div className={styles.batchItemMeta}>
                           시작 {formatDateTime(item.startTime)} · 종료 {formatDateTime(item.endTime)}
@@ -463,15 +628,74 @@ export default function App() {
                 </div>
               ) : (
                 <div className={styles.chartWrap}>
-                  {chartData.map((item) => (
-                    <div className={styles.chartItem} key={item.label}>
-                      <div className={styles.chartValue}>{formatPrice(item.value)}</div>
-                      <div className={styles.chartTrack}>
-                        <div className={styles.chartBar} style={{ height: `${item.ratio}%`, backgroundColor: item.color }} />
+                  {lineChart ? (
+                    <>
+                      <svg
+                        aria-label="가격 비교 꺾은선 차트"
+                        className={styles.lineChartSvg}
+                        viewBox={`0 0 ${lineChart.width} ${lineChart.height}`}
+                      >
+                        <defs>
+                          <linearGradient id="price-line-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                            {lineChart.points.map((point) => (
+                              <stop
+                                key={point.label}
+                                offset={`${((point.x - 40) / (lineChart.width - 80)) * 100}%`}
+                                stopColor={point.color}
+                              />
+                            ))}
+                          </linearGradient>
+                        </defs>
+                        <line
+                          className={styles.lineAxis}
+                          x1="40"
+                          x2={String(lineChart.width - 40)}
+                          y1={String(lineChart.height - lineChart.paddingBottom)}
+                          y2={String(lineChart.height - lineChart.paddingBottom)}
+                        />
+                        <path className={styles.lineArea} d={lineChart.areaPath} />
+                        <path className={styles.linePath} d={lineChart.linePath} />
+                        {lineChart.points.map((point) => (
+                          <g className={styles.clickablePoint} key={point.label} onClick={() => void loadItemTrend(point.label)}>
+                            <circle
+                              className={styles.linePoint}
+                              cx={point.x}
+                              cy={point.y}
+                              r="6"
+                              style={{ fill: point.color }}
+                            />
+                            <text className={styles.lineValue} fill={point.color} x={point.x} y={point.y - 12}>
+                              {formatPrice(point.value)}
+                            </text>
+                            <text
+                              className={styles.lineLabel}
+                              fill={point.color}
+                              x={point.x}
+                              y={lineChart.height - 12}
+                            >
+                              {point.label}
+                            </text>
+                          </g>
+                        ))}
+                      </svg>
+                      <div className={styles.lineLegend}>
+                        {lineChart.points.map((point) => (
+                          <button
+                            className={styles.lineLegendItem}
+                            key={point.label}
+                            onClick={() => void loadItemTrend(point.label)}
+                            type="button"
+                          >
+                            <span className={styles.lineLegendDot} style={{ backgroundColor: point.color }} />
+                            <div>
+                              <strong>{point.label}</strong>
+                              <p>{formatPrice(point.value)}</p>
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                      <div className={styles.chartLabel}>{item.label}</div>
-                    </div>
-                  ))}
+                    </>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -492,19 +716,91 @@ export default function App() {
               ) : (
                 <div className={styles.priceGrid}>
                   {priceCards.map((item) => (
-                    <article className={styles.priceCard} key={`${item.itemName}-${item.id}`}>
+                    <button
+                      className={styles.priceCard}
+                      key={`${item.itemName}-${item.id}`}
+                      onClick={() => void loadItemTrend(item.itemName)}
+                      type="button"
+                    >
                       <div className={styles.itemName}>{item.itemName}</div>
                       <div className={styles.itemKind}>{item.kindName || '-'}</div>
                       <div className={styles.itemPrice}>{formatPrice(item.price)}</div>
                       <div className={styles.itemUnit}>{item.unit || '-'}</div>
                       <div className={styles.itemMarket}>📍 {item.marketName || '-'}</div>
-                    </article>
+                    </button>
                   ))}
                 </div>
               )}
             </div>
           </article>
         </section>
+
+        <article className={styles.card}>
+          <div className={styles.cardHead}>
+            <h3>{selectedTrendItem ? `${selectedTrendItem} 월별 추이` : '품목 월별 추이'}</h3>
+            <span className={styles.meta}>
+              {selectedTrendItem
+                ? trendItems.find((item) => item.unit)?.unit
+                  ? `단위 ${trendItems.find((item) => item.unit)?.unit} · 차트나 카드를 클릭해 불러온 결과`
+                  : '차트나 카드를 클릭해 불러온 결과'
+                : '품목을 선택해 주세요'}
+            </span>
+          </div>
+          <div className={styles.cardBody}>
+            {selectedTrendItem == null ? (
+              <div className={styles.emptyState}>차트 포인트나 가격 카드를 클릭하면 월별 변화를 확인할 수 있습니다.</div>
+            ) : isTrendLoading ? (
+              <div className={styles.loadingState}>월별 추이 불러오는 중...</div>
+            ) : trendError ? (
+              <div className={styles.alertError}>오류: {trendError}</div>
+            ) : monthlyTrend == null ? (
+              <div className={styles.emptyState}>선택한 품목의 월별 추이 데이터가 없습니다.</div>
+            ) : (
+              <div className={styles.chartWrap}>
+                <svg
+                  aria-label="품목 월별 변화 추이"
+                  className={styles.lineChartSvg}
+                  viewBox={`0 0 ${monthlyTrend.width} ${monthlyTrend.height}`}
+                >
+                  <defs>
+                    <linearGradient id="monthly-trend-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                      <stop offset="0%" stopColor="#2e7d32" />
+                      <stop offset="100%" stopColor="#42a5f5" />
+                    </linearGradient>
+                  </defs>
+                  <line
+                    className={styles.lineAxis}
+                    x1="40"
+                    x2={String(monthlyTrend.width - 40)}
+                    y1={String(monthlyTrend.height - monthlyTrend.paddingBottom)}
+                    y2={String(monthlyTrend.height - monthlyTrend.paddingBottom)}
+                  />
+                  <path className={styles.lineArea} d={monthlyTrend.areaPath} />
+                  <path className={styles.monthlyTrendPath} d={monthlyTrend.linePath} />
+                  {monthlyTrend.points.map((point) => (
+                    <g key={point.month}>
+                      <circle className={styles.monthlyTrendPoint} cx={point.x} cy={point.y} r="6" />
+                      <text className={styles.lineValue} x={point.x} y={point.y - 12}>
+                        {formatPrice(point.value)}
+                      </text>
+                      <text className={styles.monthlyTrendLabel} x={point.x} y={monthlyTrend.height - 12}>
+                        {point.month}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
+                <div className={styles.monthlyTrendLegend}>
+                  {monthlyTrend.points.map((point) => (
+                    <div className={styles.monthlyTrendLegendItem} key={point.month}>
+                      <strong>{point.month}</strong>
+                      <p>{formatPrice(point.value)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </article>
 
         <article className={styles.card}>
           <div className={styles.cardHead}>
@@ -603,11 +899,22 @@ const styles = {
   statusRunning: 'statusRunning',
   statusIdle: 'statusIdle',
   chartWrap: 'chartWrap',
-  chartItem: 'chartItem',
-  chartValue: 'chartValue',
-  chartTrack: 'chartTrack',
-  chartBar: 'chartBar',
-  chartLabel: 'chartLabel',
+  lineChartSvg: 'lineChartSvg',
+  lineAxis: 'lineAxis',
+  lineArea: 'lineArea',
+  linePath: 'linePath',
+  linePoint: 'linePoint',
+  lineValue: 'lineValue',
+  lineLabel: 'lineLabel',
+  lineLegend: 'lineLegend',
+  lineLegendItem: 'lineLegendItem',
+  lineLegendDot: 'lineLegendDot',
+  clickablePoint: 'clickablePoint',
+  monthlyTrendPath: 'monthlyTrendPath',
+  monthlyTrendPoint: 'monthlyTrendPoint',
+  monthlyTrendLabel: 'monthlyTrendLabel',
+  monthlyTrendLegend: 'monthlyTrendLegend',
+  monthlyTrendLegendItem: 'monthlyTrendLegendItem',
   priceGrid: 'priceGrid',
   priceCard: 'priceCard',
   itemName: 'itemName',

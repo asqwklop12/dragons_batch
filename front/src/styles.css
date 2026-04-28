@@ -243,7 +243,7 @@ a {
 }
 
 .cardHead {
-  padding: 16px 20px 12px;
+  padding: 14px 16px 10px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -253,17 +253,17 @@ a {
 
 .cardHead h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .meta {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
 }
 
 .cardBody {
-  padding: 20px;
+  padding: 16px;
 }
 
 .tableCardBody {
@@ -450,50 +450,140 @@ a {
 }
 
 .chartWrap {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
-  gap: 12px;
-  min-height: 300px;
-  align-items: end;
-}
-
-.chartItem {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  justify-content: end;
-  min-height: 300px;
+  gap: 14px;
 }
 
-.chartValue {
-  font-size: 11px;
+.lineChartSvg {
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfefe 0%, #f3f7fb 100%);
+  border: 1px solid var(--border);
+}
+
+.clickablePoint {
+  cursor: pointer;
+}
+
+.lineAxis {
+  stroke: #dbe5ef;
+  stroke-width: 2;
+}
+
+.lineArea {
+  fill: rgba(46, 125, 50, 0.08);
+}
+
+.linePath {
+  fill: none;
+  stroke: url(#price-line-gradient);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.linePoint {
+  stroke: white;
+  stroke-width: 3;
+}
+
+.lineValue {
+  font-size: 10px;
   font-weight: 700;
-  color: var(--accent);
+  text-anchor: middle;
 }
 
-.chartTrack {
-  width: 100%;
-  max-width: 56px;
-  height: 220px;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  border-radius: 10px;
+.lineLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.lineLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 6px;
+}
+
+.lineLegendItem {
   display: flex;
-  align-items: end;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.chartBar {
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--surface2) 100%);
   width: 100%;
-  border-radius: 10px 10px 0 0;
+  text-align: left;
+  cursor: pointer;
 }
 
-.chartLabel {
-  font-size: 11px;
-  text-align: center;
+.lineLegendItem strong {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.lineLegendItem p {
+  margin: 1px 0 0;
+  font-size: 10px;
   color: var(--text-muted);
-  word-break: keep-all;
+}
+
+.lineLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.monthlyTrendPath {
+  fill: none;
+  stroke: url(#monthly-trend-gradient);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.monthlyTrendPoint {
+  fill: #42a5f5;
+  stroke: white;
+  stroke-width: 3;
+}
+
+.monthlyTrendLabel {
+  fill: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.monthlyTrendLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.monthlyTrendLegendItem {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--surface2) 100%);
+}
+
+.monthlyTrendLegendItem strong {
+  display: block;
+  font-size: 10px;
+}
+
+.monthlyTrendLegendItem p {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 .priceGrid {
@@ -507,6 +597,8 @@ a {
   border-radius: 10px;
   padding: 14px;
   border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
 }
 
 .itemName {
@@ -653,6 +745,6 @@ a {
   }
 
   .chartWrap {
-    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 10px;
   }
 }
