@@ -357,7 +357,7 @@ export default function App() {
     void Promise.all([loadLatest(DEFAULT_ITEM_CATEGORY), refreshBatchOverview()]);
   }, []);
 
-  async function loadItemTrend(itemName: string) {
+  async function loadItemTrend(itemName: string, itemMarketCode: string) {
     setSelectedTrendItem(itemName);
     setIsTrendLoading(true);
     setTrendError(null);
@@ -365,7 +365,7 @@ export default function App() {
     try {
       const response = await searchPrices(itemName);
       const exactItems = response.data.filter(
-        (item) => item.itemName === itemName && item.marketCode === currentCategory,
+        (item) => item.itemName === itemName && item.marketCode === itemMarketCode,
       );
       setTrendItems(exactItems);
     } catch (error) {
@@ -582,7 +582,9 @@ export default function App() {
               {batchError ? <div className={styles.alertError}>월별 상태 조회 실패: {batchError}</div> : null}
 
               <div className={styles.batchList}>
-                {monthlyHistory.length === 0 ? (
+                {isBatchLoading ? (
+                  <div className={styles.loadingState}>이력 불러오는 중...</div>
+                ) : monthlyHistory.length === 0 ? (
                   <div className={styles.emptyState}>최근 월별 실행 이력이 없습니다.</div>
                 ) : (
                   monthlyHistory.map((item) => {
@@ -661,7 +663,11 @@ export default function App() {
                         <path className={styles.lineArea} d={lineChart.areaPath} />
                         <path className={styles.linePath} d={lineChart.linePath} />
                         {lineChart.points.map((point) => (
-                          <g className={styles.clickablePoint} key={point.label} onClick={() => void loadItemTrend(point.label)}>
+                          <g
+                            className={styles.clickablePoint}
+                            key={point.label}
+                            onClick={() => void loadItemTrend(point.label, currentCategory)}
+                          >
                             <circle
                               className={styles.linePoint}
                               cx={point.x}
@@ -688,7 +694,7 @@ export default function App() {
                           <button
                             className={styles.lineLegendItem}
                             key={point.label}
-                            onClick={() => void loadItemTrend(point.label)}
+                            onClick={() => void loadItemTrend(point.label, currentCategory)}
                             type="button"
                           >
                             <span className={styles.lineLegendDot} style={{ backgroundColor: point.color }} />
@@ -724,7 +730,7 @@ export default function App() {
                     <button
                       className={styles.priceCard}
                       key={`${item.itemName}-${item.id}`}
-                      onClick={() => void loadItemTrend(item.itemName)}
+                      onClick={() => void loadItemTrend(item.itemName, item.marketCode)}
                       type="button"
                     >
                       <div className={styles.itemName}>{item.itemName}</div>
