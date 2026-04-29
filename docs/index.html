@@ -297,11 +297,140 @@
   .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-muted); }
   .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* monthly batch */
+  .monthly-form {
+    display: grid;
+    grid-template-columns: 1.2fr .9fr .8fr auto auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .field select,
+  .field input[type="number"] {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+  }
+  .field select:focus,
+  .field input[type="number"]:focus {
+    border-color: var(--accent);
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .result-box {
+    min-height: 88px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    font-size: 13px;
+  }
+  .result-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .result-box .meta-line {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  .batch-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .summary-pill {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    background: #f8fafc;
+  }
+  .summary-pill .label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .summary-pill .value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .batch-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    background: #f8fafc;
+  }
+  .batch-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .batch-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .batch-item-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .status-success { background: #e8f5e9; color: #2e7d32; }
+  .status-failed { background: #ffebee; color: #c62828; }
+  .status-running { background: #fff8e1; color: #e65100; }
+  .status-idle { background: #eceff1; color: #546e7a; }
+
   /* rank badge */
   .rank { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
   .rank-상품 { background: #e8f5e9; color: #2e7d32; }
   .rank-중품 { background: #fff3e0; color: #e65100; }
   .rank-하품 { background: #fce4ec; color: #c62828; }
+
+  @media (max-width: 980px) {
+    .monthly-form {
+      grid-template-columns: 1fr 1fr;
+    }
+    .batch-summary {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 </head>
 <body>
@@ -347,6 +476,69 @@
     <input type="date" id="main-date">
     <button class="btn btn-green" onclick="loadCategoryData()">조회</button>
     <button class="btn btn-outline" onclick="loadLatest()">최신 데이터</button>
+  </div>
+
+  <!-- 월별 배치 실행 -->
+  <div class="section-title">🗓️ 월별 가격 수집</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <h3>월별 배치 실행</h3>
+        <span class="meta">POST /api/batch/run-monthly</span>
+      </div>
+      <div class="card-body">
+        <div class="hint">메인 화면에서 바로 월별 데이터를 수집합니다. 요청 파라미터는 <strong>year / month</strong> 형식입니다.</div>
+        <div class="monthly-form">
+          <div class="field">
+            <label for="monthly-category">카테고리</label>
+            <select id="monthly-category">
+              <option value="100">식량작물</option>
+              <option value="200">채소류</option>
+              <option value="300">특용작물</option>
+              <option value="400">과일류</option>
+              <option value="500">축산물</option>
+              <option value="600">수산물</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="monthly-year">연도</label>
+            <input type="number" id="monthly-year" inputmode="numeric" min="2000" max="2100" placeholder="2026">
+          </div>
+          <div class="field">
+            <label for="monthly-month">월</label>
+            <input type="number" id="monthly-month" inputmode="numeric" min="1" max="12" placeholder="4">
+          </div>
+          <button class="btn btn-green" onclick="runMonthlyBatch()">월별 실행</button>
+          <button class="btn btn-outline" onclick="syncMonthlyCategory()">현재 탭 반영</button>
+        </div>
+        <div class="result-box" id="monthly-result">
+          <strong>대기 중</strong>
+          월별 배치를 실행하면 성공/실패, 실행 ID, 대상 월을 여기에서 확인할 수 있습니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>월별 배치 상태</h3>
+        <span class="meta">GET /api/batch/config · GET /api/batch/status</span>
+      </div>
+      <div class="card-body">
+        <div class="batch-summary">
+          <div class="summary-pill">
+            <span class="label">API 설정</span>
+            <span class="value" id="batch-config-status">확인 중...</span>
+          </div>
+          <div class="summary-pill">
+            <span class="label">최근 월별 실행 수</span>
+            <span class="value" id="monthly-history-count">확인 중...</span>
+          </div>
+        </div>
+        <div class="batch-list" id="monthly-history-list">
+          <div class="empty" style="padding:20px 12px">월별 실행 이력을 불러오는 중입니다.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 차트 + 카드 그리드 -->
@@ -415,17 +607,67 @@ let chart = null;
 let currentCategory = '100';
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function pad2(value) {
+  return String(value).padStart(2, '0');
+}
+
+function getCategoryName(code) {
+  return {
+    '100': '식량작물',
+    '200': '채소류',
+    '300': '특용작물',
+    '400': '과일류',
+    '500': '축산물',
+    '600': '수산물'
+  }[code] || code || '-';
+}
+
+function getStatusClass(status) {
+  if (status === 'COMPLETED') return 'status-success';
+  if (status === 'FAILED') return 'status-failed';
+  if (status === 'STARTING' || status === 'STARTED') return 'status-running';
+  return 'status-idle';
+}
+
+function formatDateTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('ko-KR');
+}
+
+async function requestApi(url, options = {}) {
+  const res = await fetch(url, options);
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || '요청 처리에 실패했습니다.');
+  }
+  return json.data;
 }
 
 document.getElementById('main-date').value = today();
+document.getElementById('monthly-year').value = new Date().getFullYear();
+document.getElementById('monthly-month').value = new Date().getMonth() + 1;
+document.getElementById('monthly-category').value = currentCategory;
 
 // 카테고리 선택
 function selectCategory(el) {
   document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   currentCategory = el.dataset.code;
+  document.getElementById('monthly-category').value = currentCategory;
   loadLatest();
+}
+
+function syncMonthlyCategory() {
+  document.getElementById('monthly-category').value = currentCategory;
 }
 
 // 최신 데이터 로드
@@ -626,7 +868,89 @@ function showError(msg) {
   document.getElementById('chart-empty').innerHTML = `<div class="alert alert-error">오류: ${msg}</div>`;
 }
 
+async function refreshMonthlyBatchStatus() {
+  try {
+    const [config, status] = await Promise.all([
+      requestApi(`${BASE}/api/batch/config`),
+      requestApi(`${BASE}/api/batch/status?limit=10`)
+    ]);
+
+    document.getElementById('batch-config-status').textContent =
+      config.mockMode ? 'Mock 모드' : (config.apiConfigured ? '준비 완료' : '설정 필요');
+
+    const monthlyItems = (status.data || []).filter(item => item.jobName === 'kamisMonthlyPriceJob');
+    document.getElementById('monthly-history-count').textContent = `${monthlyItems.length}건`;
+
+    const list = document.getElementById('monthly-history-list');
+    if (!monthlyItems.length) {
+      list.innerHTML = '<div class="empty" style="padding:20px 12px">최근 월별 실행 이력이 없습니다.</div>';
+      return;
+    }
+
+    list.innerHTML = monthlyItems.slice(0, 5).map(item => {
+      const params = item.params || {};
+      const year = params.year || params.yyyy || '-';
+      const month = params.month || params.mm || '-';
+      return `
+        <div class="batch-item">
+          <div class="batch-item-head">
+            <div class="batch-item-title">실행 #${item.jobExecutionId}</div>
+            <span class="status-chip ${getStatusClass(item.status)}">${item.status}</span>
+          </div>
+          <div class="batch-item-meta">카테고리 ${getCategoryName(params.itemCategoryCode)} · 대상 ${year}-${month}</div>
+          <div class="batch-item-meta">시작 ${formatDateTime(item.startTime)} · 종료 ${formatDateTime(item.endTime)}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    document.getElementById('batch-config-status').textContent = '조회 실패';
+    document.getElementById('monthly-history-count').textContent = '-';
+    document.getElementById('monthly-history-list').innerHTML =
+      `<div class="alert alert-error">월별 상태 조회 실패: ${e.message}</div>`;
+  }
+}
+
+async function runMonthlyBatch() {
+  const itemCategoryCode = document.getElementById('monthly-category').value;
+  const year = String(document.getElementById('monthly-year').value || '').trim();
+  const rawMonth = String(document.getElementById('monthly-month').value || '').trim();
+  const month = pad2(rawMonth);
+  const resultBox = document.getElementById('monthly-result');
+
+  if (!/^\d{4}$/.test(year)) {
+    resultBox.innerHTML = '<div class="alert alert-error">연도는 4자리 숫자로 입력해주세요.</div>';
+    return;
+  }
+  if (!/^\d{1,2}$/.test(rawMonth) || Number(rawMonth) < 1 || Number(rawMonth) > 12) {
+    resultBox.innerHTML = '<div class="alert alert-error">월은 1~12 범위로 입력해주세요.</div>';
+    return;
+  }
+
+  resultBox.innerHTML = '<strong>실행 중...</strong>월별 배치를 실행하고 있습니다.';
+
+  try {
+    const body = new URLSearchParams({ itemCategoryCode, year, month });
+    const data = await requestApi(`${BASE}/api/batch/run-monthly`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body
+    });
+
+    resultBox.innerHTML = `
+      <div class="alert alert-info" style="margin-bottom:10px">월별 배치가 성공적으로 실행되었습니다.</div>
+      <strong>${data.status}</strong>
+      실행 ID ${data.jobExecutionId} · 카테고리 ${getCategoryName(data.itemCategoryCode)} · 대상 ${data.year}-${data.month}
+      <div class="meta-line">시작 ${formatDateTime(data.startTime)} · 종료 ${formatDateTime(data.endTime)}</div>
+    `;
+
+    await refreshMonthlyBatchStatus();
+  } catch (e) {
+    resultBox.innerHTML = `<div class="alert alert-error">월별 배치 실행 실패: ${e.message}</div>`;
+  }
+}
+
 // 초기 로드
+refreshMonthlyBatchStatus();
 loadLatest();
 </script>
 </body>
