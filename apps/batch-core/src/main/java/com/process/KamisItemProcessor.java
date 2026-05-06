@@ -18,6 +18,22 @@ public class KamisItemProcessor implements ItemProcessor<PriceReadItem, PriceDat
       return null;
     }
 
+    if (item.itemCode() == null || item.itemCode().isBlank()) {
+      throw new SkippablePriceDataException("itemCode가 비어 있습니다.");
+    }
+    if (item.itemName() == null || item.itemName().isBlank()) {
+      throw new SkippablePriceDataException("itemName이 비어 있습니다.");
+    }
+    if (item.unit() == null || item.unit().isBlank()) {
+      throw new SkippablePriceDataException("unit이 비어 있습니다.");
+    }
+    if (item.regDay() == null) {
+      throw new SkippablePriceDataException("regDay가 비어 있습니다.");
+    }
+    if (item.price() <= 0) {
+      throw new SkippablePriceDataException("price가 0 이하입니다.");
+    }
+
     return PriceData.create(
         item.itemCode(),
         item.itemName(),

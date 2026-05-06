@@ -185,6 +185,30 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   }
 
   @Test
+  void runBatchSkipsInvalidItemsAndStillCompletes() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "정상 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay),
+                new PriceReadItem("912", "비정상 무", "01", "일반", "100", "서울", "01", "상품", 0, "20kg", regDay)
+            )
+        );
+
+    HttpResponse<String> response = sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("정상"))
+        .extracting(PriceData::getItemCode)
+        .containsExactly("911");
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("비정상"))
+        .isEmpty();
+    assertThat(jdbcTemplate.queryForObject("select sum(PROCESS_SKIP_COUNT) from BATCH_STEP_EXECUTION", Integer.class))
+        .isEqualTo(1);
+  }
+
+  @Test
   void runBatchPersistsExecutionMetadataInDatabase() throws Exception {
     LocalDate regDay = LocalDate.of(2024, 1, 15);
     given(priceReadService.readItems("200", regDay))

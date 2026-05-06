@@ -1,6 +1,7 @@
 package com.process;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -53,5 +54,27 @@ class KamisItemProcessorTest {
     KamisItemProcessor processor = new KamisItemProcessor(Clock.systemDefaultZone());
 
     assertThat(processor.process(null)).isNull();
+  }
+
+  @Test
+  void processThrowsSkippableExceptionWhenPriceIsZeroOrNegative() {
+    KamisItemProcessor processor = new KamisItemProcessor(Clock.systemDefaultZone());
+    PriceReadItem item = new PriceReadItem(
+        "111",
+        "배추",
+        "01",
+        "일반",
+        "100",
+        "서울",
+        "01",
+        "상품",
+        0,
+        "10kg",
+        LocalDate.of(2024, 1, 15)
+    );
+
+    assertThatThrownBy(() -> processor.process(item))
+        .isInstanceOf(SkippablePriceDataException.class)
+        .hasMessage("price가 0 이하입니다.");
   }
 }

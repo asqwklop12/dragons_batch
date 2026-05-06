@@ -1,0 +1,34 @@
+package com.config;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.process.SkippablePriceDataException;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.step.skip.SkipLimitExceededException;
+
+class BatchSkipPolicyTest {
+
+  @Test
+  void shouldSkipReturnsTrueForSkippableExceptionUnderLimit() {
+    BatchSkipPolicy batchSkipPolicy = new BatchSkipPolicy(10);
+
+    assertThat(batchSkipPolicy.shouldSkip(new SkippablePriceDataException("bad row"), 0)).isTrue();
+    assertThat(batchSkipPolicy.shouldSkip(new SkippablePriceDataException("bad row"), 9)).isTrue();
+  }
+
+  @Test
+  void shouldSkipThrowsWhenSkippableExceptionExceedsLimit() {
+    BatchSkipPolicy batchSkipPolicy = new BatchSkipPolicy(10);
+
+    assertThatThrownBy(() -> batchSkipPolicy.shouldSkip(new SkippablePriceDataException("bad row"), 10))
+        .isInstanceOf(SkipLimitExceededException.class);
+  }
+
+  @Test
+  void shouldSkipReturnsFalseForNonSkippableException() {
+    BatchSkipPolicy batchSkipPolicy = new BatchSkipPolicy(10);
+
+    assertThat(batchSkipPolicy.shouldSkip(new IllegalStateException("db down"), 0)).isFalse();
+  }
+}
