@@ -1,6 +1,6 @@
 package com.config;
 
-import com.process.SkippablePriceDataException;
+import com.exception.SkippablePriceDataException;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 

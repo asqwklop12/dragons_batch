@@ -1,4 +1,4 @@
-package com.process;
+package com.exception;
 
 public class SkippablePriceDataException extends RuntimeException {
 

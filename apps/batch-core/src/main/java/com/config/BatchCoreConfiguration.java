@@ -13,6 +13,7 @@ import java.time.YearMonth;
 import model.price.PriceData;
 import model.price.PriceDataRepository;
 import model.price.PriceReadItem;
+import com.exception.TransientPriceReadException;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.listener.ItemWriteListener;
@@ -109,6 +110,8 @@ public class BatchCoreConfiguration {
         .<PriceReadItem, PriceData>chunk(Constants.CHUNK_SIZE)
         .transactionManager(transactionManager)
         .faultTolerant()
+        .retry(TransientPriceReadException.class)
+        .retryLimit(Constants.RETRY_LIMIT)
         .skipPolicy(batchSkipPolicy)
         .reader(kamisItemReader)
         .processor(kamisItemProcessor)
@@ -140,6 +143,8 @@ public class BatchCoreConfiguration {
         .<PriceReadItem, PriceData>chunk(Constants.CHUNK_SIZE)
         .transactionManager(transactionManager)
         .faultTolerant()
+        .retry(TransientPriceReadException.class)
+        .retryLimit(Constants.RETRY_LIMIT)
         .skipPolicy(batchSkipPolicy)
         .reader(kamisMonthlyItemReader)
         .processor(kamisItemProcessor)

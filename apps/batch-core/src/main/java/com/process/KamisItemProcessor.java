@@ -1,5 +1,6 @@
 package com.process;
 
+import com.exception.SkippablePriceDataException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;

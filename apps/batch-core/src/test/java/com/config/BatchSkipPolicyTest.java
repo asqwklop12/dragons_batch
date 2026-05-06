@@ -3,7 +3,7 @@ package com.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.process.SkippablePriceDataException;
+import com.exception.SkippablePriceDataException;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 

@@ -2,6 +2,8 @@ package com.dragons.interfaces.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.application.MonthlyPriceReadService;
 import com.application.PriceReadService;
@@ -20,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import model.price.PriceData;
 import model.price.PriceReadItem;
+import com.exception.TransientPriceReadException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -206,6 +209,27 @@ class ApiControllerTest extends MySqlContainerTestSupport {
         .isEmpty();
     assertThat(jdbcTemplate.queryForObject("select sum(PROCESS_SKIP_COUNT) from BATCH_STEP_EXECUTION", Integer.class))
         .isEqualTo(1);
+  }
+
+  @Test
+  void runBatchRetriesTransientReadFailureAndCompletes() throws Exception {
+    LocalDate regDay = LocalDate.of(2024, 1, 15);
+    given(priceReadService.readItems("200", regDay))
+        .willThrow(new TransientPriceReadException("temporary timeout", new RuntimeException("timeout")))
+        .willReturn(
+            List.of(
+                new PriceReadItem("911", "재시도 배추", "01", "일반", "100", "서울", "01", "상품", 12345, "10kg", regDay)
+            )
+        );
+
+    HttpResponse<String> response = sendPost("/api/batch/run?itemCategoryCode=200&regDay=2024-01-15");
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).contains("\"status\":\"COMPLETED\"");
+    assertThat(jpaPriceDataRepository.findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc("재시도"))
+        .extracting(PriceData::getItemCode)
+        .containsExactly("911");
+    verify(priceReadService, times(2)).readItems("200", regDay);
   }
 
   @Test

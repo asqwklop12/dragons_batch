@@ -20,6 +20,7 @@ public final class Constants {
 
   public static final int CHUNK_SIZE = 100;
   public static final int SKIP_LIMIT = 10;
+  public static final int RETRY_LIMIT = 3;
 
   private Constants() {
   }
