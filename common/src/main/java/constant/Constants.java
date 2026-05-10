@@ -17,6 +17,11 @@ public final class Constants {
   public static final String NOT_APPLICABLE = "";
   public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+
+  public static final int CHUNK_SIZE = 100;
+  public static final int SKIP_LIMIT = 10;
+  public static final int RETRY_LIMIT = 3;
+
   private Constants() {
   }
 }

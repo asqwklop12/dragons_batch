@@ -6,17 +6,23 @@ import com.process.KamisItemProcessor;
 import com.read.KamisItemReader;
 import com.read.KamisMonthlyItemReader;
 import com.write.KamisItemWriter;
+import constant.Constants;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import model.price.PriceData;
 import model.price.PriceDataRepository;
 import model.price.PriceReadItem;
+import com.exception.TransientPriceReadException;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.listener.ItemWriteListener;
+import org.springframework.batch.core.listener.SkipListener;
+import org.springframework.batch.core.listener.StepExecutionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.ItemReader;
@@ -30,7 +36,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Configuration(proxyBeanMethods = false)
 public class BatchCoreConfiguration {
 
-  private static final int CHUNK_SIZE = 100;
+
 
   @Bean
   Clock batchClock() {
@@ -56,12 +62,12 @@ public class BatchCoreConfiguration {
   ItemReader<PriceReadItem> kamisMonthlyItemReader(
       MonthlyPriceReadService monthlyPriceReadService,
       @Value("#{jobParameters['itemCategoryCode']}") String itemCategoryCode,
-      @Value("#{jobParameters['yyyy']}") String yyyy,
-      @Value("#{jobParameters['mm']}") String mm
+      @Value("#{jobParameters['yyyy']}") String year,
+      @Value("#{jobParameters['mm']}") String month
   ) {
-    YearMonth yearMonth = (yyyy == null || yyyy.isBlank() || mm == null || mm.isBlank())
+    YearMonth yearMonth = (year == null || year.isBlank() || month == null || month.isBlank())
         ? YearMonth.now()
-        : YearMonth.of(Integer.parseInt(yyyy), Integer.parseInt(mm));
+        : YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
 
     return new KamisMonthlyItemReader(
         monthlyPriceReadService,
@@ -81,19 +87,38 @@ public class BatchCoreConfiguration {
   }
 
   @Bean
+  SkipPolicy batchSkipPolicy() {
+    return new BatchSkipPolicy(Constants.SKIP_LIMIT);
+  }
+
+  @Bean
+  BatchStepMonitoringListener batchStepMonitoringListener() {
+    return new BatchStepMonitoringListener();
+  }
+
+  @Bean
   Step kamisPriceStep(
       JobRepository jobRepository,
       PlatformTransactionManager transactionManager,
       @Qualifier("kamisItemReader") ItemReader<PriceReadItem> kamisItemReader,
       ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor,
-      ItemWriter<PriceData> kamisItemWriter
+      ItemWriter<PriceData> kamisItemWriter,
+      SkipPolicy batchSkipPolicy,
+      BatchStepMonitoringListener batchStepMonitoringListener
   ) {
     return new StepBuilder("kamisPriceStep", jobRepository)
-        .<PriceReadItem, PriceData>chunk(CHUNK_SIZE)
+        .<PriceReadItem, PriceData>chunk(Constants.CHUNK_SIZE)
         .transactionManager(transactionManager)
+        .faultTolerant()
+        .retry(TransientPriceReadException.class)
+        .retryLimit(Constants.RETRY_LIMIT)
+        .skipPolicy(batchSkipPolicy)
         .reader(kamisItemReader)
         .processor(kamisItemProcessor)
         .writer(kamisItemWriter)
+        .listener((ItemWriteListener<PriceData>) batchStepMonitoringListener)
+        .listener((SkipListener<PriceReadItem, PriceData>) batchStepMonitoringListener)
+        .listener(batchStepMonitoringListener)
         .build();
   }
 
@@ -110,14 +135,23 @@ public class BatchCoreConfiguration {
       PlatformTransactionManager transactionManager,
       @Qualifier("kamisMonthlyItemReader") ItemReader<PriceReadItem> kamisMonthlyItemReader,
       ItemProcessor<PriceReadItem, PriceData> kamisItemProcessor,
-      ItemWriter<PriceData> kamisItemWriter
+      ItemWriter<PriceData> kamisItemWriter,
+      SkipPolicy batchSkipPolicy,
+      BatchStepMonitoringListener batchStepMonitoringListener
   ) {
     return new StepBuilder("kamisMonthlyPriceStep", jobRepository)
-        .<PriceReadItem, PriceData>chunk(CHUNK_SIZE)
+        .<PriceReadItem, PriceData>chunk(Constants.CHUNK_SIZE)
         .transactionManager(transactionManager)
+        .faultTolerant()
+        .retry(TransientPriceReadException.class)
+        .retryLimit(Constants.RETRY_LIMIT)
+        .skipPolicy(batchSkipPolicy)
         .reader(kamisMonthlyItemReader)
         .processor(kamisItemProcessor)
         .writer(kamisItemWriter)
+        .listener((ItemWriteListener<PriceData>) batchStepMonitoringListener)
+        .listener((SkipListener<PriceReadItem, PriceData>) batchStepMonitoringListener)
+        .listener(batchStepMonitoringListener)
         .build();
   }
 
