@@ -22,7 +22,7 @@ public class BatchStepMonitoringListener
 
   @Override
   public void afterWrite(Chunk<? extends PriceData> items) {
-    log.info("Successfully wrote {} price items.", items.size());
+    log.debug("Successfully wrote {} price items.", items.size());
   }
 
   @Override

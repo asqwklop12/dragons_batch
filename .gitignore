@@ -37,7 +37,6 @@ out/
 .vscode/
 
 .omx
-.codex
 logs
 .omx/
 AGENTS.md

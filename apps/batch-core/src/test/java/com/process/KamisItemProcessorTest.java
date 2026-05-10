@@ -60,7 +60,7 @@ class KamisItemProcessorTest {
   @Test
   void processThrowsSkippableExceptionWhenPriceIsZeroOrNegative() {
     KamisItemProcessor processor = new KamisItemProcessor(Clock.systemDefaultZone());
-    PriceReadItem item = new PriceReadItem(
+    PriceReadItem zeroPriceItem = new PriceReadItem(
         "111",
         "배추",
         "01",
@@ -73,8 +73,24 @@ class KamisItemProcessorTest {
         "10kg",
         LocalDate.of(2024, 1, 15)
     );
+    PriceReadItem negativePriceItem = new PriceReadItem(
+        "111",
+        "배추",
+        "01",
+        "일반",
+        "100",
+        "서울",
+        "01",
+        "상품",
+        -1,
+        "10kg",
+        LocalDate.of(2024, 1, 15)
+    );
 
-    assertThatThrownBy(() -> processor.process(item))
+    assertThatThrownBy(() -> processor.process(zeroPriceItem))
+        .isInstanceOf(SkippablePriceDataException.class)
+        .hasMessage("price가 0 이하입니다.");
+    assertThatThrownBy(() -> processor.process(negativePriceItem))
         .isInstanceOf(SkippablePriceDataException.class)
         .hasMessage("price가 0 이하입니다.");
   }

@@ -20,7 +20,7 @@ final class TransientPriceReadExceptionMapper {
     }
 
     Integer status = readStatus(throwable);
-    return status != null && (status == 429 || status >= 500);
+    return status != null && (status == 408 || status == 429 || status >= 500);
   }
 
   private static Integer readStatus(Throwable throwable) {
