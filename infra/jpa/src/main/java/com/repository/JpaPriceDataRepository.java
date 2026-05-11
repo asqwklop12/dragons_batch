@@ -12,5 +12,5 @@ public interface JpaPriceDataRepository extends JpaRepository<PriceData, Long> {
 
   List<PriceData> findAllByItemNameContainingIgnoreCaseOrderByCreatedAtDescIdDesc(String itemName);
 
-  List<PriceData> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+  List<PriceData> findAllByOrderByRegDayDescCreatedAtDescIdDesc(Pageable pageable);
 }

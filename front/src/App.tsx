@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   fetchBatchConfig,
   fetchBatchStatuses,
@@ -17,6 +17,12 @@ type MonthlyRunForm = {
   itemCategoryCode: string;
   year: string;
   month: string;
+};
+
+type TrendSeriesOption = {
+  key: string;
+  label: string;
+  items: PriceItem[];
 };
 
 function createInitialMonthlyForm(): MonthlyRunForm {
@@ -92,10 +98,6 @@ function getRankTone(rankName: string) {
   if (rankName.includes('중품')) return 'rankMid';
   if (rankName.includes('하품')) return 'rankLow';
   return 'rankDefault';
-}
-
-function toMonthKey(regDay: string) {
-  return regDay.slice(0, 7);
 }
 
 function buildSmoothPath(points: Array<{ x: number; y: number }>) {
@@ -179,11 +181,25 @@ export default function App() {
   const [isMonthlySubmitting, setIsMonthlySubmitting] = useState(false);
   const [isHistoryRefreshing, setIsHistoryRefreshing] = useState(false);
   const [selectedTrendItem, setSelectedTrendItem] = useState<string | null>(null);
+  const [selectedTrendSeriesKey, setSelectedTrendSeriesKey] = useState('');
   const [trendItems, setTrendItems] = useState<PriceItem[]>([]);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
   const [trendError, setTrendError] = useState<string | null>(null);
+  const [isPriceTableExpanded, setIsPriceTableExpanded] = useState(false);
+
+  const trendCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const trendChartRef = useRef<ChartInstance | null>(null);
+  const trendRequestIdRef = useRef(0);
 
   const batchPageHref = `${getBackendOrigin()}/batch.html`;
+
+  function resetTrend() {
+    trendRequestIdRef.current += 1;
+    setSelectedTrendItem(null);
+    setSelectedTrendSeriesKey('');
+    setTrendItems([]);
+    setTrendError(null);
+  }
 
   const monthlyHistory = useMemo(
     () => batchStatuses.filter((item) => item.jobName === 'kamisMonthlyPriceJob').slice(0, 5),
@@ -194,7 +210,7 @@ export default function App() {
     const grouped = new Map<string, { total: number; count: number; unit: string }>();
 
     priceItems.forEach((item) => {
-      if (!item.price) return;
+      if (item.price == null) return;
 
       const current = grouped.get(item.itemName) ?? { total: 0, count: 0, unit: item.unit };
       current.total += item.price;
@@ -239,6 +255,11 @@ export default function App() {
     return { width, height, paddingBottom, points, linePath, areaPath };
   }, [chartData]);
 
+  const visiblePriceItems = useMemo(
+    () => (isPriceTableExpanded ? priceItems : priceItems.slice(0, 5)),
+    [isPriceTableExpanded, priceItems],
+  );
+
   const priceCards = useMemo(() => {
     const seen = new Set<string>();
     return priceItems.filter((item) => {
@@ -248,42 +269,47 @@ export default function App() {
     }).slice(0, 12);
   }, [priceItems]);
 
-  const monthlyTrend = useMemo(() => {
-    const grouped = new Map<string, { total: number; count: number; unit: string }>();
+  const trendSeriesOptions = useMemo<TrendSeriesOption[]>(() => {
+    const grouped = new Map<string, TrendSeriesOption>();
 
     trendItems.forEach((item) => {
-      const key = toMonthKey(item.regDay);
-      const current = grouped.get(key) ?? { total: 0, count: 0, unit: item.unit };
-      current.total += item.price;
-      current.count += 1;
-      if (!current.unit && item.unit) current.unit = item.unit;
+      const key = [item.marketCode, item.kindCode, item.rankCode, item.unit].join('|');
+      const label = [item.marketName, item.kindName, item.rankName, item.unit].filter(Boolean).join(' · ');
+      const current = grouped.get(key) ?? { key, label: label || item.itemName, items: [] };
+      current.items.push(item);
       grouped.set(key, current);
     });
 
-    const rows = [...grouped.entries()]
-      .map(([month, value]) => ({
-        month,
-        value: Math.round(value.total / value.count),
-        unit: value.unit,
-      }))
-      .sort((left, right) => left.month.localeCompare(right.month));
-
-    if (rows.length === 0) {
-      return null;
-    }
-
-    const width = 760;
-    const height = 260;
-    const paddingX = 40;
-    const paddingTop = 20;
-    const paddingBottom = 36;
-    const points = createScaledPoints(rows, width, height, paddingX, paddingTop, paddingBottom);
-    const baselineY = height - paddingBottom;
-    const linePath = buildSmoothPath(points);
-    const areaPath = buildAreaPath(points, baselineY);
-
-    return { width, height, paddingBottom, points, linePath, areaPath };
+    return [...grouped.values()].sort((left, right) => left.label.localeCompare(right.label, 'ko-KR'));
   }, [trendItems]);
+
+  const selectedTrendSeries = useMemo(() => {
+    if (trendSeriesOptions.length === 0) return null;
+    return trendSeriesOptions.find((series) => series.key === selectedTrendSeriesKey) ?? trendSeriesOptions[0];
+  }, [selectedTrendSeriesKey, trendSeriesOptions]);
+
+  const dailyTrend = useMemo(() => {
+    if (selectedTrendSeries == null) return null;
+
+    const grouped = new Map<string, { total: number; count: number }>();
+
+    selectedTrendSeries.items.forEach((item) => {
+      if (item.price == null || !item.regDay) return;
+      const current = grouped.get(item.regDay) ?? { total: 0, count: 0 };
+      current.total += item.price;
+      current.count += 1;
+      grouped.set(item.regDay, current);
+    });
+
+    const rows = [...grouped.entries()]
+      .map(([regDay, value]) => ({
+        regDay,
+        value: Math.round(value.total / value.count),
+      }))
+      .sort((left, right) => left.regDay.localeCompare(right.regDay));
+
+    return rows.length === 0 ? null : rows;
+  }, [selectedTrendSeries]);
 
   async function loadPrices(
     task: Promise<{ data: PriceItem[] }>,
@@ -311,7 +337,11 @@ export default function App() {
 
   async function loadLatest(categoryCode = currentCategory) {
     const category = getCategoryMeta(categoryCode);
+    const isCategoryChanged = categoryCode !== currentCategory;
     setCurrentCategory(categoryCode);
+    if (isCategoryChanged) {
+      resetTrend();
+    }
     const nextItems = await loadPrices(fetchLatestPrices(500), category.label, { categoryCode });
     if (nextItems[0]?.regDay) {
       setSelectedDate(nextItems[0].regDay);
@@ -357,22 +387,30 @@ export default function App() {
     void Promise.all([loadLatest(DEFAULT_ITEM_CATEGORY), refreshBatchOverview()]);
   }, []);
 
-  async function loadItemTrend(itemName: string, itemMarketCode: string) {
+  async function loadItemTrend(itemName: string, itemMarketCode?: string) {
+    const requestId = ++trendRequestIdRef.current;
     setSelectedTrendItem(itemName);
+    setSelectedTrendSeriesKey('');
     setIsTrendLoading(true);
     setTrendError(null);
 
     try {
       const response = await searchPrices(itemName);
+      if (requestId !== trendRequestIdRef.current) return;
+
       const exactItems = response.data.filter(
-        (item) => item.itemName === itemName && item.marketCode === itemMarketCode,
+        (item) => item.itemName === itemName && (itemMarketCode == null || item.marketCode === itemMarketCode),
       );
       setTrendItems(exactItems);
     } catch (error) {
+      if (requestId !== trendRequestIdRef.current) return;
+
       setTrendError(error instanceof Error ? error.message : '추이 데이터를 불러오지 못했습니다.');
       setTrendItems([]);
     } finally {
-      setIsTrendLoading(false);
+      if (requestId === trendRequestIdRef.current) {
+        setIsTrendLoading(false);
+      }
     }
   }
 
@@ -391,6 +429,91 @@ export default function App() {
       setIsMonthlySubmitting(false);
     }
   }
+
+  useEffect(() => {
+    const canvas = trendCanvasRef.current;
+    const Chart = window.Chart;
+
+    if (canvas == null || dailyTrend == null || selectedTrendSeries == null) {
+      return;
+    }
+
+    if (Chart == null) {
+      setTrendError('Chart.js를 불러오지 못했습니다.');
+      return;
+    }
+
+    const context = canvas.getContext('2d');
+    if (context == null) {
+      setTrendError('차트를 렌더링할 수 없습니다.');
+      return;
+    }
+
+    trendChartRef.current = new Chart(context, {
+      type: 'line',
+      data: {
+        labels: dailyTrend.map((row) => row.regDay),
+        datasets: [
+          {
+            label: selectedTrendSeries.label,
+            data: dailyTrend.map((row) => row.value),
+            borderColor: '#2e7d32',
+            backgroundColor: 'rgba(46, 125, 50, 0.14)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#42a5f5',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => `${context.dataset.label}: ${formatPrice(context.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: '날짜',
+            },
+          },
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: '가격',
+            },
+            ticks: {
+              callback: (value) => formatPrice(Number(value)),
+            },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (trendChartRef.current != null) {
+        trendChartRef.current.destroy();
+        trendChartRef.current = null;
+      }
+    };
+  }, [dailyTrend, selectedTrendSeries]);
 
   function updateMonthlyField<Key extends keyof MonthlyRunForm>(key: Key, value: MonthlyRunForm[Key]) {
     setMonthlyForm((current) => ({
@@ -666,7 +789,7 @@ export default function App() {
                           <g
                             className={styles.clickablePoint}
                             key={point.label}
-                            onClick={() => void loadItemTrend(point.label, currentCategory)}
+                            onClick={() => void loadItemTrend(point.label)}
                           >
                             <circle
                               className={styles.linePoint}
@@ -694,7 +817,7 @@ export default function App() {
                           <button
                             className={styles.lineLegendItem}
                             key={point.label}
-                            onClick={() => void loadItemTrend(point.label, currentCategory)}
+                            onClick={() => void loadItemTrend(point.label)}
                             type="button"
                           >
                             <span className={styles.lineLegendDot} style={{ backgroundColor: point.color }} />
@@ -748,65 +871,44 @@ export default function App() {
 
         <article className={styles.card}>
           <div className={styles.cardHead}>
-            <h3>{selectedTrendItem ? `${selectedTrendItem} 월별 추이` : '품목 월별 추이'}</h3>
+            <h3>{selectedTrendItem ? `${selectedTrendItem} 날짜별 추이` : '품목 날짜별 추이'}</h3>
             <span className={styles.meta}>
               {selectedTrendItem
-                ? trendItems.find((item) => item.unit)?.unit
-                  ? `단위 ${trendItems.find((item) => item.unit)?.unit} · 차트나 카드를 클릭해 불러온 결과`
-                  : '차트나 카드를 클릭해 불러온 결과'
+                ? 'Chart.js · /api/prices/search 결과'
                 : '품목을 선택해 주세요'}
             </span>
           </div>
           <div className={styles.cardBody}>
             {selectedTrendItem == null ? (
-              <div className={styles.emptyState}>차트 포인트나 가격 카드를 클릭하면 월별 변화를 확인할 수 있습니다.</div>
+              <div className={styles.emptyState}>차트 포인트나 가격 카드를 클릭하면 날짜별 변화를 확인할 수 있습니다.</div>
             ) : isTrendLoading ? (
-              <div className={styles.loadingState}>월별 추이 불러오는 중...</div>
+              <div className={styles.loadingState}>날짜별 추이 불러오는 중...</div>
             ) : trendError ? (
               <div className={styles.alertError}>오류: {trendError}</div>
-            ) : monthlyTrend == null ? (
-              <div className={styles.emptyState}>선택한 품목의 월별 추이 데이터가 없습니다.</div>
+            ) : dailyTrend == null || selectedTrendSeries == null ? (
+              <div className={styles.emptyState}>선택한 품목의 날짜별 추이 데이터가 없습니다.</div>
             ) : (
               <div className={styles.chartWrap}>
-                <svg
-                  aria-label="품목 월별 변화 추이"
-                  className={styles.lineChartSvg}
-                  viewBox={`0 0 ${monthlyTrend.width} ${monthlyTrend.height}`}
-                >
-                  <defs>
-                    <linearGradient id="monthly-trend-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
-                      <stop offset="0%" stopColor="#2e7d32" />
-                      <stop offset="100%" stopColor="#42a5f5" />
-                    </linearGradient>
-                  </defs>
-                  <line
-                    className={styles.lineAxis}
-                    x1="40"
-                    x2={String(monthlyTrend.width - 40)}
-                    y1={String(monthlyTrend.height - monthlyTrend.paddingBottom)}
-                    y2={String(monthlyTrend.height - monthlyTrend.paddingBottom)}
+                <div className={styles.trendToolbar}>
+                  <label htmlFor="trend-series">가격 계열</label>
+                  <select
+                    id="trend-series"
+                    value={selectedTrendSeries.key}
+                    onChange={(event) => setSelectedTrendSeriesKey(event.target.value)}
+                  >
+                    {trendSeriesOptions.map((series) => (
+                      <option key={series.key} value={series.key}>
+                        {series.label} · {series.items.length}건
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.chartCanvasWrap}>
+                  <canvas
+                    ref={trendCanvasRef}
+                    aria-label={`${selectedTrendItem} 날짜별 가격 변동 차트`}
+                    className={styles.chartCanvas}
                   />
-                  <path className={styles.lineArea} d={monthlyTrend.areaPath} />
-                  <path className={styles.monthlyTrendPath} d={monthlyTrend.linePath} />
-                  {monthlyTrend.points.map((point) => (
-                    <g key={point.month}>
-                      <circle className={styles.monthlyTrendPoint} cx={point.x} cy={point.y} r="6" />
-                      <text className={styles.lineValue} x={point.x} y={point.y - 12}>
-                        {formatPrice(point.value)}
-                      </text>
-                      <text className={styles.monthlyTrendLabel} x={point.x} y={monthlyTrend.height - 12}>
-                        {point.month}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-                <div className={styles.monthlyTrendLegend}>
-                  {monthlyTrend.points.map((point) => (
-                    <div className={styles.monthlyTrendLegendItem} key={point.month}>
-                      <strong>{point.month}</strong>
-                      <p>{formatPrice(point.value)}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
@@ -840,7 +942,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {priceItems.map((item) => (
+                    {visiblePriceItems.map((item) => (
                       <tr key={item.id}>
                         <td>
                           <strong>{item.itemName || '-'}</strong>
@@ -859,6 +961,17 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
+                {priceItems.length > 5 ? (
+                  <div className={styles.tableFooter}>
+                    <button
+                      className={styles.btnOutline}
+                      onClick={() => setIsPriceTableExpanded((current) => !current)}
+                      type="button"
+                    >
+                      {isPriceTableExpanded ? '접기' : `더보기 (${priceItems.length - visiblePriceItems.length}건)`}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -921,6 +1034,9 @@ const styles = {
   lineLegendItem: 'lineLegendItem',
   lineLegendDot: 'lineLegendDot',
   clickablePoint: 'clickablePoint',
+  chartCanvasWrap: 'chartCanvasWrap',
+  chartCanvas: 'chartCanvas',
+  trendToolbar: 'trendToolbar',
   monthlyTrendPath: 'monthlyTrendPath',
   monthlyTrendPoint: 'monthlyTrendPoint',
   monthlyTrendLabel: 'monthlyTrendLabel',
@@ -936,6 +1052,7 @@ const styles = {
   tableCardBody: 'tableCardBody',
   tableWrap: 'tableWrap',
   table: 'table',
+  tableFooter: 'tableFooter',
   priceValue: 'priceValue',
   rankBadge: 'rankBadge',
   rankGood: 'rankGood',

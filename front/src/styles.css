@@ -761,3 +761,60 @@ a:focus-visible,
     gap: 10px;
   }
 }
+
+.trendToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.trendToolbar label {
+  font-weight: 700;
+}
+
+.trendToolbar select {
+  min-width: 240px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--text);
+}
+
+.chartCanvasWrap {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfefe 0%, #f3f7fb 100%);
+}
+
+.chartCanvas {
+  width: 100% !important;
+  height: 280px !important;
+}
+
+@media (max-width: 800px) {
+  .trendToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trendToolbar select {
+    width: 100%;
+  }
+}
+
+.tableFooter {
+  display: flex;
+  justify-content: center;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+}

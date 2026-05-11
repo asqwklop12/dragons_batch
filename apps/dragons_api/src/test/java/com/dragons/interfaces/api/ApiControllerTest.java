@@ -83,11 +83,18 @@ class ApiControllerTest extends MySqlContainerTestSupport {
   }
 
   @Test
-  void getLatestPricesReturnsLimitedResults() throws Exception {
+  void getLatestPricesReturnsLimitedResultsByRegDay() throws Exception {
+    jpaPriceDataRepository.saveAndFlush(
+        priceData("999", "생성일만 최신", "01", "일반", "100", "서울", "01", "상품", 1_000, "1kg", "2024-01-10", "2026-01-01T00:00:00")
+    );
+
     HttpResponse<String> response = sendGet("/api/prices/latest?limit=2");
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("\"data\":{\"count\":2");
+    assertThat(response.body()).contains("\"itemName\":\"양파\"");
+    assertThat(response.body()).contains("\"itemName\":\"사과\"");
+    assertThat(response.body()).doesNotContain("생성일만 최신");
   }
 
   @Test

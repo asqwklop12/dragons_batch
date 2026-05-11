@@ -37,6 +37,6 @@ public class PriceDataRepositoryImpl implements PriceDataRepository {
     if (limit <= 0) {
       return List.of();
     }
-    return repository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, limit));
+    return repository.findAllByOrderByRegDayDescCreatedAtDescIdDesc(PageRequest.of(0, limit));
   }
 }
