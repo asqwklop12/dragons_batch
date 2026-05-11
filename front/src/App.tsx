@@ -189,10 +189,12 @@ export default function App() {
 
   const trendCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const trendChartRef = useRef<ChartInstance | null>(null);
+  const trendRequestIdRef = useRef(0);
 
   const batchPageHref = `${getBackendOrigin()}/batch.html`;
 
   function resetTrend() {
+    trendRequestIdRef.current += 1;
     setSelectedTrendItem(null);
     setSelectedTrendSeriesKey('');
     setTrendItems([]);
@@ -208,7 +210,7 @@ export default function App() {
     const grouped = new Map<string, { total: number; count: number; unit: string }>();
 
     priceItems.forEach((item) => {
-      if (!item.price) return;
+      if (item.price == null) return;
 
       const current = grouped.get(item.itemName) ?? { total: 0, count: 0, unit: item.unit };
       current.total += item.price;
@@ -292,7 +294,7 @@ export default function App() {
     const grouped = new Map<string, { total: number; count: number }>();
 
     selectedTrendSeries.items.forEach((item) => {
-      if (!item.price || !item.regDay) return;
+      if (item.price == null || !item.regDay) return;
       const current = grouped.get(item.regDay) ?? { total: 0, count: 0 };
       current.total += item.price;
       current.count += 1;
@@ -386,6 +388,7 @@ export default function App() {
   }, []);
 
   async function loadItemTrend(itemName: string, itemMarketCode?: string) {
+    const requestId = ++trendRequestIdRef.current;
     setSelectedTrendItem(itemName);
     setSelectedTrendSeriesKey('');
     setIsTrendLoading(true);
@@ -393,15 +396,21 @@ export default function App() {
 
     try {
       const response = await searchPrices(itemName);
+      if (requestId !== trendRequestIdRef.current) return;
+
       const exactItems = response.data.filter(
         (item) => item.itemName === itemName && (itemMarketCode == null || item.marketCode === itemMarketCode),
       );
       setTrendItems(exactItems);
     } catch (error) {
+      if (requestId !== trendRequestIdRef.current) return;
+
       setTrendError(error instanceof Error ? error.message : '추이 데이터를 불러오지 못했습니다.');
       setTrendItems([]);
     } finally {
-      setIsTrendLoading(false);
+      if (requestId === trendRequestIdRef.current) {
+        setIsTrendLoading(false);
+      }
     }
   }
 
@@ -424,11 +433,6 @@ export default function App() {
   useEffect(() => {
     const canvas = trendCanvasRef.current;
     const Chart = window.Chart;
-
-    if (trendChartRef.current != null) {
-      trendChartRef.current.destroy();
-      trendChartRef.current = null;
-    }
 
     if (canvas == null || dailyTrend == null || selectedTrendSeries == null) {
       return;
